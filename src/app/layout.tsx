@@ -1,6 +1,7 @@
-import './globals.css'; // Dòng này bắt buộc phải có để kích hoạt giao diện tối
+import "./globals.css";
+
 export const metadata = {
-  title: 'Arc Perp DEX',
+  title: 'Arc Perp DEX (GRVT Clone)',
   description: 'Hybrid Perpetual DEX on Arc Testnet',
 }
 
@@ -11,7 +12,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className="bg-[#0B0E11] text-gray-200 antialiased">
+        {children}
+      </body>
     </html>
   )
 }
