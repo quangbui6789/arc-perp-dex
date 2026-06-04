@@ -141,7 +141,7 @@ export default function Home() {
 
     const p = parseFloat(priceInput);
     const q = parseFloat(qtyInput);
-    if (isNaN(p) || isNaN(q) || q <= 0) return;
+    if (isNaN(p) || iNaN(q) || q <= 0) return;
 
     const totalCost = p * q;
     const levMultiplier = parseInt(leverage);
@@ -187,9 +187,9 @@ export default function Home() {
             <span className="text-emerald-400 text-base">⬢</span> grvt <span className="text-[10px] text-gray-500 font-mono font-normal ml-1">sandbox</span>
           </div>
           <nav className="flex items-center gap-5 font-medium text-gray-400">
-            <button onClick={() => setActiveTab('TRADE')} className={`hover:text-white ${activeTab === 'TRADE' && 'text-white font-bold'}`}>Trade</button>
-            <button onClick={() => setShowDepositModal(true)} className="hover:text-emerald-400 text-emerald-500 font-bold">📥 Nạp Coin (Deposit)</button>
-            <button onClick={() => setShowTransferModal(true)} className="hover:text-blue-400 text-blue-500 font-bold">💸 Chuyển Coin (Transfer)</button>
+            <button type="button" onClick={() => setActiveTab('TRADE')} className={`hover:text-white ${activeTab === 'TRADE' && 'text-white font-bold'}`}>Trade</button>
+            <button type="button" onClick={() => setShowDepositModal(true)} className="hover:text-emerald-400 text-emerald-500 font-bold">📥 Nạp Coin (Deposit)</button>
+            <button type="button" onClick={() => setShowTransferModal(true)} className="hover:text-blue-400 text-blue-500 font-bold">💸 Chuyển Coin (Transfer)</button>
           </nav>
         </div>
 
@@ -197,13 +197,14 @@ export default function Home() {
         <div className="flex items-center gap-3">
           <div className="flex items-center bg-[#161c22] border border-[#252f3b] rounded-lg px-2 py-1 gap-2">
             <span className="text-[10px] text-gray-400 font-mono font-bold">Circle Faucet:</span>
-            <button onClick={() => handleFaucet('USDC')} className="text-[10px] bg-[#222a35] hover:bg-emerald-500 hover:text-black font-mono px-1.5 py-0.5 rounded transition-colors">+ USDC</button>
-            <button onClick={() => handleFaucet('EURC')} className="text-[10px] bg-[#222a35] hover:bg-blue-500 hover:text-black font-mono px-1.5 py-0.5 rounded transition-colors">+ EURC</button>
-            <button onClick={() => handleFaucet('btc')} className="text-[10px] bg-[#222a35] hover:bg-yellow-500 hover:text-black font-mono px-1.5 py-0.5 rounded transition-colors">+ btc</button>
+            <button type="button" onClick={() => handleFaucet('USDC')} className="text-[10px] bg-[#222a35] hover:bg-emerald-500 hover:text-black font-mono px-1.5 py-0.5 rounded transition-colors">+ USDC</button>
+            <button type="button" onClick={() => handleFaucet('EURC')} className="text-[10px] bg-[#222a35] hover:bg-blue-500 hover:text-black font-mono px-1.5 py-0.5 rounded transition-colors">+ EURC</button>
+            <button type="button" onClick={() => handleFaucet('btc')} className="text-[10px] bg-[#222a35] hover:bg-yellow-500 hover:text-black font-mono px-1.5 py-0.5 rounded transition-colors">+ btc</button>
           </div>
 
           {!isConnected ? (
             <button
+              type="button"
               onClick={() => setShowConnectModal(true)}
               className="bg-white hover:bg-gray-200 text-black font-bold px-3 py-1.5 rounded-lg text-xs tracking-tight transition-all"
             >
@@ -212,6 +213,7 @@ export default function Home() {
           ) : (
             <div className="relative">
               <button
+                type="button"
                 onClick={() => setShowDisconnectMenu(!showDisconnectMenu)}
                 className="bg-[#161c22] border border-[#252f3b] rounded-lg px-3 py-1.5 font-mono text-emerald-400 hover:bg-[#1f2730] flex items-center gap-2"
               >
@@ -219,7 +221,7 @@ export default function Home() {
               </button>
               {showDisconnectMenu && (
                 <div className="absolute right-0 mt-1 w-40 bg-[#12161a] border border-[#252f3b] rounded-lg p-1 shadow-2xl z-50">
-                  <button onClick={() => { setIsConnected(false); setShowDisconnectMenu(false); }} className="w-full text-left text-red-400 hover:bg-red-950/30 px-3 py-2 rounded-md transition-colors font-medium">
+                  <button type="button" onClick={() => { setIsConnected(false); setShowDisconnectMenu(false); }} className="w-full text-left text-red-400 hover:bg-red-950/30 px-3 py-2 rounded-md transition-colors font-medium">
                     Disconnect
                   </button>
                 </div>
@@ -262,8 +264,8 @@ export default function Home() {
                 </div>
                 {showPairSelector && (
                   <div className="absolute top-9 left-0 w-44 bg-[#12161a] border border-[#252f3b] rounded-lg shadow-2xl p-1 z-40">
-                    <button onClick={() => { setCurrentPair('btc/USDC'); setShowPairSelector(false); }} className="w-full text-left px-3 py-2 hover:bg-[#161c22] rounded text-white font-mono">btc / USDC</button>
-                    <button onClick={() => { setCurrentPair('EURC/USDC'); setShowPairSelector(false); }} className="w-full text-left px-3 py-2 hover:bg-[#161c22] rounded text-white font-mono">EURC / USDC</button>
+                    <button type="button" onClick={() => { setCurrentPair('btc/USDC'); setShowPairSelector(false); }} className="w-full text-left px-3 py-2 hover:bg-[#161c22] rounded text-white font-mono">btc / USDC</button>
+                    <button type="button" onClick={() => { setCurrentPair('EURC/USDC'); setShowPairSelector(false); }} className="w-full text-left px-3 py-2 hover:bg-[#161c22] rounded text-white font-mono">EURC / USDC</button>
                   </div>
                 )}
               </div>
@@ -314,4 +316,139 @@ export default function Home() {
                       <thead><tr className="text-gray-500 text-[10px]"><th className="pb-1">Price (USDC)</th><th className="pb-1">Quantity</th><th className="pb-1 text-right">Total</th></tr></thead>
                       <tbody>
                         {sellOrders.map((o, i) => (
-                          <tr key={i} className={`hover:bg-red-950/20 ${o.isUser ? 'bg-yellow-950 border border-yellow-700 animate-pulse' : ''}`}><td className="py-1 text-red-500 font-bold">{o.price.toFixed(currentPair === 'btc/USDC' ? 1 : 4)}</td><td className="
+                          <tr key={i} className={`hover:bg-red-950/20 ${o.isUser ? 'bg-yellow-950 border border-yellow-700 animate-pulse' : ''}`}><td className="py-1 text-red-500 font-bold">{o.price.toFixed(currentPair === 'btc/USDC' ? 1 : 4)}</td><td className="py-1 text-gray-300">{o.quantity.toFixed(3)}</td><td className="py-1 text-right text-gray-400">{o.total.toFixed(2)}</td></tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div>
+                    <div className="text-emerald-400 font-bold mb-1 border-b border-[#252f3b] pb-1">🟢 Buy Orders (Bids)</div>
+                    <table className="w-full text-left">
+                      <thead><tr className="text-gray-500 text-[10px]"><th className="pb-1">Price (USDC)</th><th className="pb-1">Quantity</th><th className="pb-1 text-right">Total</th></tr></thead>
+                      <tbody>
+                        {buyOrders.map((o, i) => (
+                          <tr key={i} className={`hover:bg-emerald-950/20 ${o.isUser ? 'bg-yellow-950 border border-yellow-700 animate-pulse' : ''}`}><td className="py-1 text-emerald-400 font-bold">{o.price.toFixed(currentPair === 'btc/USDC' ? 1 : 4)}</td><td className="py-1 text-gray-300">{o.quantity.toFixed(3)}</td><td className="py-1 text-right text-gray-400">{o.total.toFixed(2)}</td></tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* PHẢI: KHUNG ĐẶT LỆNH TRADE CONSOLE */}
+            <div className="xl:col-span-3 bg-[#0d1013] p-4 flex flex-col justify-between overflow-y-auto">
+              <div>
+                <div className="flex gap-2 mb-3">
+                  <select className="flex-1 bg-[#161c22] border border-[#252f3b] text-white p-2 rounded-lg focus:outline-none">
+                    <option>Cross Margin</option>
+                  </select>
+                  <select value={leverage} onChange={(e) => setLeverage(e.target.value)} className="w-20 bg-[#161c22] border border-[#252f3b] text-emerald-400 p-2 rounded-lg font-bold font-mono focus:outline-none">
+                    <option>10x</option><option>20x</option><option>50x</option>
+                  </select>
+                </div>
+
+                <div className="flex bg-[#161c22] p-1 rounded-lg mb-4 border border-[#1f2730]">
+                  <button type="button" onClick={() => setOrderType('BUY')} className={`flex-1 text-center py-1.5 text-xs font-black rounded uppercase ${orderType === 'BUY' ? 'bg-emerald-500 text-black' : 'text-gray-400'}`}>Buy / Long</button>
+                  <button type="button" onClick={() => setOrderType('SELL')} className={`flex-1 text-center py-1.5 text-xs font-black rounded uppercase ${orderType === 'SELL' ? 'bg-red-500 text-white' : 'text-gray-400'}`}>Sell / Short</button>
+                </div>
+
+                <form onSubmit={handlePlaceOrder} className="space-y-4">
+                  <div>
+                    <div className="flex justify-between text-gray-400 mb-1"><span>Price</span><span>USDC</span></div>
+                    <input type="number" step="any" value={priceInput} onChange={(e) => setPriceInput(e.target.value)} className="w-full bg-[#161c22] border border-[#252f3b] text-white p-2 rounded-lg font-mono focus:outline-none" />
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-gray-400 mb-1"><span>Quantity</span><span>{currentPair.split('/')[0]}</span></div>
+                    <input type="number" step="any" value={qtyInput} onChange={(e) => setQtyInput(e.target.value)} className="w-full bg-[#161c22] border border-[#252f3b] text-white p-2 rounded-lg font-mono focus:outline-none" />
+                  </div>
+
+                  <div className="bg-[#161c22] p-3 rounded-lg border border-[#1f2730] text-[11px] font-mono space-y-1.5 text-gray-400">
+                    <div className="flex justify-between"><span>Order Value:</span><span className="text-white">{(parseFloat(priceInput || '0') * parseFloat(qtyInput || '0')).toFixed(2)} USDC</span></div>
+                    <div className="flex justify-between"><span>Est. Required Margin:</span><span className="text-emerald-400">{((parseFloat(priceInput || '0') * parseFloat(qtyInput || '0')) / parseInt(leverage)).toFixed(2)} USDC</span></div>
+                  </div>
+
+                  <button type="submit" className={`w-full py-2.5 rounded-lg font-black uppercase tracking-wider ${orderType === 'BUY' ? 'bg-emerald-500 text-black' : 'bg-red-500 text-white'}`}>
+                    {orderType === 'BUY' ? '🟢 Execute Long Position' : '🛑 Execute Short Position'}
+                  </button>
+                </form>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 1: CHỨC NĂNG NẠP TIỀN (DEPOSIT) */}
+      {showDepositModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+          <form onSubmit={handleDepositSubmit} className="bg-[#0d1013] border border-[#252f3b] rounded-xl max-w-sm w-full p-5 relative shadow-2xl space-y-4">
+            <button type="button" onClick={() => setShowDepositModal(false)} className="absolute top-3 right-3 text-gray-500 hover:text-white">✕</button>
+            <h3 className="text-xs font-bold uppercase text-emerald-400">📥 Nạp tiền vào tài khoản sàn GRVT</h3>
+            <div>
+              <label className="text-[10px] text-gray-400 block mb-1 uppercase font-bold">Chọn tài sản Circle Testnet</label>
+              <select value={depositAsset} onChange={(e) => setDepositAsset(e.target.value as any)} className="w-full bg-[#161c22] border border-[#252f3b] p-2.5 rounded-lg text-white font-mono focus:outline-none">
+                <option value="USDC">USDC (Ví Web3 khả dụng: {walletBalances.USDC.toFixed(2)})</option>
+                <option value="EURC">EURC (Ví Web3 khả dụng: {walletBalances.EURC.toFixed(2)})</option>
+                <option value="btc">btc (Ví Web3 khả dụng: {walletBalances.btc.toFixed(4)})</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-[10px] text-gray-400 block mb-1 uppercase font-bold">Số lượng nạp</label>
+              <input type="number" step="any" value={depositAmount} onChange={(e) => setDepositAmount(e.target.value)} className="w-full bg-[#161c22] border border-[#252f3b] p-2 rounded-lg font-mono text-white focus:outline-none" />
+            </div>
+            <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-black py-2.5 rounded-lg uppercase">
+              Xác nhận ký quỹ nạp tiền
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* MODAL 2: CHỨC NĂNG CHUYỂN TIỀN (TRANSFER) */}
+      {showTransferModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+          <form onSubmit={handleTransferSubmit} className="bg-[#0d1013] border border-[#252f3b] rounded-xl max-w-sm w-full p-5 relative shadow-2xl space-y-4">
+            <button type="button" onClick={() => setShowTransferModal(false)} className="absolute top-3 right-3 text-gray-500 hover:text-white">✕</button>
+            <h3 className="text-xs font-bold uppercase text-blue-400">💸 Chuyển tài sản nội bộ Sandbox</h3>
+            <div>
+              <label className="text-[10px] text-gray-400 block mb-1 uppercase font-bold">Chọn tài sản trong sàn</label>
+              <select value={transferAsset} onChange={(e) => setTransferAsset(e.target.value as any)} className="w-full bg-[#161c22] border border-[#252f3b] p-2.5 rounded-lg text-white font-mono focus:outline-none">
+                <option value="USDC">USDC (Sàn khả dụng: {accountBalances.USDC.toFixed(2)})</option>
+                <option value="EURC">EURC (Sàn khả dụng: {accountBalances.EURC.toFixed(2)})</option>
+                <option value="btc">btc (Sàn khả dụng: {accountBalances.btc.toFixed(4)})</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-[10px] text-gray-400 block mb-1 uppercase font-bold">Địa chỉ nhận</label>
+              <input type="text" placeholder="0x..." value={transferTo} onChange={(e) => setTransferTo(e.target.value)} className="w-full bg-[#161c22] border border-[#252f3b] p-2 rounded-lg text-white focus:outline-none" required />
+            </div>
+            <div>
+              <label className="text-[10px] text-gray-400 block mb-1 uppercase font-bold">Số lượng chuyển</label>
+              <input type="number" step="any" value={transferAmount} onChange={(e) => setTransferAmount(e.target.value)} className="w-full bg-[#161c22] border border-[#252f3b] p-2 rounded-lg font-mono text-white focus:outline-none" />
+            </div>
+            <button type="submit" className="w-full bg-blue-500 hover:bg-blue-400 text-white font-black py-2.5 rounded-lg uppercase">
+              Xác nhận chuyển token
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* DIALOG CHỌN VÍ */}
+      {showConnectModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+          <div className="bg-[#0d1013] border border-[#252f3b] rounded-xl max-w-xs w-full p-5 relative shadow-2xl">
+            <button type="button" onClick={() => setShowConnectModal(false)} className="absolute top-3 right-3 text-gray-500 hover:text-white">✕</button>
+            <h3 className="text-xs font-bold uppercase tracking-wider mb-4 text-gray-400">Connect Web3 Wallet</h3>
+            <div className="space-y-2">
+              <button type="button" onClick={() => connectWallet('metamask')} className="w-full bg-[#161c22] hover:bg-[#1f2730] border border-[#252f3b] rounded-lg p-3 flex items-center justify-between font-bold text-left text-white">
+                <span>🦊 MetaMask App</span><span className="text-[9px] bg-emerald-950 text-emerald-400 px-1.5 py-0.5 rounded font-mono">Active</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+    </main>
+  );
+}
