@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { createWalletClient, createPublicClient, custom, http, parseUnits, formatUnits } from 'viem';
 
-// Cấu hình mạng ARC Testnet (USDC Gas Token)
 const arcTestnet = {
   id: 5042002,
   name: 'ARC Testnet',
@@ -35,28 +34,24 @@ interface OrderBookRow {
 }
 
 export default function Home() {
-  // Web3 States
   const [isConnected, setIsConnected] = useState(false);
   const [walletAddress, setWalletAddress] = useState('');
   const [usdcBalance, setUsdcBalance] = useState('0.00');
   const [txLoading, setTxLoading] = useState(false);
   const [latestTxHash, setLatestTxHash] = useState('');
 
-  // Trading States
   const [orderType, setOrderType] = useState<'BUY' | 'SELL'>('BUY');
   const [marginType, setMarginType] = useState<'Cross' | 'Isolated'>('Isolated');
-  const [leverage, setLeverage] = useState(40);
+  const [leverage] = useState(40);
   const [priceInput, setPriceInput] = useState('63822.7');
   const [qtyInput, setQtyInput] = useState('0.1');
   const [marketPrice, setMarketPrice] = useState(63822.7);
-  const [priceChange, setPriceChange] = useState(-5.03);
+  const [priceChange] = useState(-5.03);
 
-  // Lists
   const [positions, setPositions] = useState<Position[]>([]);
   const [asks, setAsks] = useState<OrderBookRow[]>([]);
   const [bids, setBids] = useState<OrderBookRow[]>([]);
 
-  // 1. Kết nối ví Wallet & Tự động chuyển vùng sang ARC Testnet
   const connectWallet = async () => {
     if (typeof window !== 'undefined' && (window as any).ethereum) {
       try {
@@ -93,7 +88,6 @@ export default function Home() {
     }
   };
 
-  // 2. Lấy số dư USDC thực tế từ mạng lưới (6 decimals)
   const getOnChainBalance = async (address: string) => {
     try {
       const publicClient = createPublicClient({ chain: arcTestnet, transport: http() });
@@ -104,7 +98,6 @@ export default function Home() {
     }
   };
 
-  // 3. Thực thi giao dịch Phái sinh ký quỹ trực tiếp với Block Explorer Arcscan
   const handleExecuteOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isConnected) return connectWallet();
@@ -114,16 +107,14 @@ export default function Home() {
       const ethereum = (window as any).ethereum;
       const walletClient = createWalletClient({ chain: arcTestnet, transport: custom(ethereum) });
 
-      // Gửi giao dịch On-chain thực tế
       const txHash = await walletClient.sendTransaction({
         account: walletAddress as `0x${string}`,
-        to: '0x0000000000000000000000000000000000000000', // Điền Contract Router của ARC Perp vào đây
+        to: '0x0000000000000000000000000000000000000000',
         value: parseUnits('0', 6), 
       });
 
       setLatestTxHash(txHash);
 
-      // Thêm vị thế (Position) mới vào danh sách quản lý bên dưới
       const newPosition: Position = {
         pair: 'BTCUSD Perp',
         type: orderType === 'BUY' ? 'LONG' : 'SHORT',
@@ -137,20 +128,18 @@ export default function Home() {
       setPositions(prev => [newPosition, ...prev]);
       setTimeout(() => getOnChainBalance(walletAddress), 3500);
     } catch (error: any) {
-      alert(`Giao dịch bị từ chối hoặc lỗi: ${error.message}`);
-    } finally {
+      alert(`Giao dịch thất bại: ${error.message}`);
+    } compression: {
       setTxLoading(false);
     }
   };
 
-  // Real-time Engine nhảy giá và tạo Orderbook nhộn nhịp giống sàn thật
   useEffect(() => {
     const interval = setInterval(() => {
       setMarketPrice(prev => {
         const change = (Math.random() - 0.5) * 6;
         const nextPrice = prev + change;
 
-        // Tạo dữ liệu cho Orderbook
         const generatedAsks: OrderBookRow[] = [];
         const generatedBids: OrderBookRow[] = [];
         for (let i = 1; i <= 8; i++) {
@@ -184,7 +173,6 @@ export default function Home() {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* NÚT CIRCLE FAUCET KẾT NỐI TRỰC TIẾP */}
           <a 
             href="https://faucet.circle.com/" 
             target="_blank" 
@@ -224,18 +212,19 @@ export default function Home() {
           <span className="text-gray-500">Perpetual</span>
         </div>
         <div className="text-emerald-400 font-bold text-xs">${marketPrice.toFixed(1)}</div>
-        <div><span className="text-gray-500">24h Change:</span> <span className={priceChange >= 0 ? 'text-emerald-500' : 'text-red-500'}>{priceChange}%</span></div>
+        <div>
+          <span className="text-gray-500">24h Change:</span>{' '}
+          <span className={priceChange >= 0 ? 'text-emerald-500' : 'text-red-500'}>{priceChange}%</span>
+        </div>
         <div><span className="text-gray-500">Mark Price:</span> <span className="text-white">${marketPrice.toFixed(1)}</span></div>
         <div className="hidden lg:block"><span className="text-gray-500">Open Interest:</span> <span className="text-white">171,753,926.6</span></div>
         <div className="hidden lg:block"><span className="text-gray-500">Funding / Countdown:</span> <span className="text-emerald-400">+0.0100% / 02:43:08</span></div>
       </div>
 
-      {/* MAIN WORKSPACE BỐ CỤC CHUẨN GRVT */}
+      {/* MAIN WORKSPACE */}
       <div className="flex-grow grid grid-cols-1 xl:grid-cols-12 overflow-hidden">
         
-        {/* TRÁI + GIỮA: CHART, ORDERBOOK, POSITIONS */}
         <div className="xl:col-span-9 flex flex-col overflow-y-auto">
-          
           <div className="grid grid-cols-1 lg:grid-cols-12 border-b border-[#161a22]">
             {/* TRADING CHART SIMULATION */}
             <div className="lg:col-span-8 p-4 bg-[#090b0d] flex flex-col justify-between min-h-[400px]">
@@ -244,7 +233,6 @@ export default function Home() {
                 <span className="text-emerald-500">● Live Streaming</span>
               </div>
               
-              {/* Giả lập đồ thị nến lớn chuyên nghiệp của GRVT */}
               <div className="w-full h-72 bg-[#0b0e12] rounded border border-[#161a22] relative flex items-end justify-center p-4 gap-4 mt-2">
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#141923_1px,transparent_1px),linear-gradient(to_bottom,#141923_1px,transparent_1px)] bg-[size:30px_30px] opacity-20"></div>
                 <div className="w-10 h-44 bg-red-500/80 rounded-sm relative flex items-center justify-center"><span className="absolute -top-5 text-red-400 font-mono text-[9px]">$64.1K</span></div>
@@ -256,11 +244,10 @@ export default function Home() {
               </div>
             </div>
 
-            {/* ORDERBOOK CHUẨN SÀN PERP */}
+            {/* ORDERBOOK */}
             <div className="lg:col-span-4 p-4 bg-[#0c0e12] border-t lg:border-t-0 lg:border-l border-[#161a22] font-mono text-[11px]">
               <div className="text-gray-400 font-bold mb-3">Order Book</div>
               
-              {/* Asks */}
               <div className="space-y-0.5 text-red-500">
                 {asks.slice(0, 5).map((row, i) => (
                   <div key={i} className="flex justify-between hover:bg-red-950/20 px-1 py-0.5">
@@ -271,12 +258,10 @@ export default function Home() {
                 ))}
               </div>
 
-              {/* Spread */}
               <div className="py-2 my-2 border-y border-[#161a22] text-center text-white font-bold bg-[#11151d]">
                 Spread 0.1 (0.00015%)
               </div>
 
-              {/* Bids */}
               <div className="space-y-0.5 text-emerald-500">
                 {bids.slice(0, 5).map((row, i) => (
                   <div key={i} className="flex justify-between hover:bg-emerald-950/20 px-1 py-0.5">
@@ -289,7 +274,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* KHU VỰC THỐNG KÊ VỊ THẾ (POSITIONS PANEL) ĐỂ CHECK ARCSCAN */}
+          {/* POSITIONS PANEL */}
           <div className="p-4 bg-[#090b0d] flex-grow min-h-[200px]">
             <div className="flex items-center gap-4 border-b border-[#161a22] pb-2 mb-3 text-gray-400 font-bold">
               <span className="text-white border-b-2 border-emerald-500 pb-2 px-1">Positions ({positions.length})</span>
@@ -341,25 +326,22 @@ export default function Home() {
           </div>
         </div>
 
-        {/* PHẢI: CONSOLE ĐIỀU KHIỂN ĐẶT LỆNH CHUẨN GRVT */}
+        {/* PHẢI: CONSOLE ĐIỀU KHIỂN CHUẨN GRVT */}
         <div className="xl:col-span-3 bg-[#0c0e12] border-t xl:border-t-0 border-l border-[#161a22] p-4 flex flex-col justify-between">
           <div>
-            {/* Margin Type Selector */}
             <div className="flex items-center justify-between mb-4 font-mono">
               <div className="flex gap-1 bg-[#12161f] p-0.5 rounded border border-[#1b2331]">
-                <button onClick={() => setMarginType('Cross')} className={`px-2 py-1 rounded text-[10px] ${marginType === 'Cross' ? 'bg-[#1b2331] text-white font-bold' : 'text-gray-500'}`}>Cross</button>
-                <button onClick={() => setMarginType('Isolated')} className={`px-2 py-1 rounded text-[10px] ${marginType === 'Isolated' ? 'bg-[#1b2331] text-white font-bold' : 'text-gray-500'}`}>Isolated</button>
+                <button type="button" onClick={() => setMarginType('Cross')} className={`px-2 py-1 rounded text-[10px] ${marginType === 'Cross' ? 'bg-[#1b2331] text-white font-bold' : 'text-gray-500'}`}>Cross</button>
+                <button type="button" onClick={() => setMarginType('Isolated')} className={`px-2 py-1 rounded text-[10px] ${marginType === 'Isolated' ? 'bg-[#1b2331] text-white font-bold' : 'text-gray-500'}`}>Isolated</button>
               </div>
               <div className="text-gray-400 text-[10px]">Đòn bẩy: <span className="text-emerald-400 font-bold">{leverage}x</span></div>
             </div>
 
-            {/* Buy / Sell Tabs */}
             <div className="flex bg-[#12161f] p-1 rounded border border-[#1b2331] mb-4">
-              <button onClick={() => setOrderType('BUY')} className={`flex-1 text-center py-2 font-bold rounded uppercase ${orderType === 'BUY' ? 'bg-emerald-500 text-black' : 'text-gray-400'}`}>Buy / Long</button>
-              <button onClick={() => setOrderType('SELL')} className={`flex-1 text-center py-2 font-bold rounded uppercase ${orderType === 'SELL' ? 'bg-red-500 text-white' : 'text-gray-400'}`}>Sell / Short</button>
+              <button type="button" onClick={() => setOrderType('BUY')} className={`flex-1 text-center py-2 font-bold rounded uppercase ${orderType === 'BUY' ? 'bg-emerald-500 text-black' : 'text-gray-400'}`}>Buy / Long</button>
+              <button type="button" onClick={() => setOrderType('SELL')} className={`flex-1 text-center py-2 font-bold rounded uppercase ${orderType === 'SELL' ? 'bg-red-500 text-white' : 'text-gray-400'}`}>Sell / Short</button>
             </div>
 
-            {/* Order Fields */}
             <form onSubmit={handleExecuteOrder} className="space-y-4 font-mono">
               <div>
                 <div className="flex justify-between text-gray-500 mb-1">
@@ -377,13 +359,11 @@ export default function Home() {
                 <input type="number" step="any" value={qtyInput} onChange={(e) => setQtyInput(e.target.value)} className="w-full bg-[#12161f] border border-[#1f2633] rounded p-2.5 text-white focus:outline-none focus:border-emerald-500" />
               </div>
 
-              {/* Thanh trượt phần trăm ký quỹ mô phỏng */}
               <div className="pt-2">
-                <input type="range" min="0" max="100" defaultValue="25" className="w-full accent-emerald-500 cursor-pointer" />
+                <input type="range" min="0" max="100" defaultValue="25" onChange={() => {}} className="w-full accent-emerald-500 cursor-pointer" />
                 <div className="flex justify-between text-[10px] text-gray-600 mt-1"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>
               </div>
 
-              {/* Submit Trigger */}
               <button 
                 type="submit"
                 disabled={txLoading}
@@ -394,7 +374,6 @@ export default function Home() {
             </form>
           </div>
 
-          {/* Metadata footer panel */}
           <div className="border-t border-[#161a22] pt-3 text-[10px] text-gray-500 font-mono space-y-1">
             <div className="flex justify-between"><span>Trạng thái Node:</span><span className="text-emerald-500">Hoạt động (100%)</span></div>
             <div className="flex justify-between"><span>Độ trễ (Latency):</span><span className="text-white">12ms</span></div>
