@@ -3,7 +3,6 @@
 import { useState } from 'react';
 
 export default function Home() {
-  // Quản lý trạng thái chuyển đổi tab trực tiếp ở client
   const [activeTab, setActiveTab] = useState('TRADE');
 
   const navItems = [
@@ -18,12 +17,10 @@ export default function Home() {
       {/* HEADER / NAVBAR */}
       <header className="flex items-center justify-between px-6 py-4 border-b border-gray-900 bg-[#0b0e11]">
         <div className="flex items-center gap-8">
-          {/* Logo */}
           <div className="flex items-center gap-2 font-black text-lg tracking-wider text-white">
             <span className="text-yellow-400 text-xl">⚡</span> ARC PERP
           </div>
           
-          {/* Menu Tab */}
           <nav className="flex items-center gap-6">
             {navItems.map((item) => {
               const isActive = activeTab === item.name;
@@ -51,17 +48,16 @@ export default function Home() {
           </nav>
         </div>
 
-        {/* Giả lập nút Connect Wallet / Số ví */}
         <div className="bg-gray-900/60 border border-gray-800 rounded-lg px-3 py-1.5 text-xs font-mono text-green-400 max-w-[140px] truncate shadow-sm">
           0x2F484e967b28879...
         </div>
       </header>
 
-      {/* CONTENT CHANGING BY TAB */}
+      {/* CONTENT */}
       <div className="p-4 max-w-[1600px] mx-auto">
         {activeTab === 'TRADE' && (
           <>
-            {/* Ticker / Thanh thông tin thị trường */}
+            {/* Ticker */}
             <div className="flex flex-wrap items-center gap-6 mb-4 text-[11px] text-gray-400 bg-[#12161a]/40 border border-gray-900 rounded-lg p-3">
               <div className="font-bold text-white text-xs flex items-center gap-1.5">
                 MON / USDT <span className="text-red-500 font-normal bg-red-950/30 px-1 py-0.5 rounded text-[10px]">-1.70%</span>
@@ -72,25 +68,24 @@ export default function Home() {
               <div>Funding Rate: <span className="text-green-400 font-mono">+0.0100%</span></div>
             </div>
 
-            {/* Bố cục chính: Biểu đồ + Khung đặt lệnh */}
+            {/* Main Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-              {/* Vùng hiển thị biểu đồ */}
+              {/* Chart Vùng hiển thị biểu đồ nến CSS hoàn chỉnh */}
               <div className="lg:col-span-3 bg-[#12161a] border border-gray-900 rounded-xl p-4 flex flex-col justify-between min-h-[480px]">
                 <div className="text-[10px] text-gray-500 font-mono flex items-center gap-1.5 mb-3">
                   <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
                   MONUSDT • 15m • TradingView Stream
                 </div>
                 
-                {/* Đồ thị nến UI dựng trực tiếp bằng CSS đảm bảo hiển thị 100% không kẹt loading */}
                 <div className="w-full flex-grow flex flex-col justify-center">
                   <div className="flex h-[380px] flex-col items-center justify-center bg-[#161a1e] rounded-lg p-4 relative overflow-hidden border border-gray-800/40">
-                    {/* Giả lập lưới đồ thị */}
                     <div className="absolute inset-0 grid grid-cols-6 grid-rows-6 pointer-events-none opacity-5">
                       {[...Array(36)].map((_, i) => (
                         <div key={i} className="border border-white"></div>
                       ))}
                     </div>
 
+                    {/* Đồ thị nến UI thực tế */}
                     <div className="flex items-end gap-4 h-[220px] w-full max-w-xl justify-center px-4 relative z-10">
                       <div className="flex flex-col items-center h-full justify-end w-6">
                         <div className="w-[2px] h-20 bg-green-500"></div>
@@ -136,7 +131,7 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Vùng hiển thị Margin Console */}
+              {/* Margin Console */}
               <div className="bg-[#12161a] border border-gray-900 rounded-xl p-5 h-fit shadow-lg">
                 <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest mb-5 text-gray-200">
                   <span className="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.6)]"></span>
@@ -173,7 +168,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Sổ lệnh mẫu phía dưới */}
+            {/* Order Book */}
             <div className="mt-4 bg-[#12161a] border border-gray-900 rounded-xl p-4">
               <div className="text-xs font-bold text-gray-400 border-b border-gray-900 pb-2 mb-3 flex items-center gap-1.5 uppercase tracking-wider">
                 📄 Order Book
