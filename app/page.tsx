@@ -14,7 +14,7 @@ export default function Home() {
   ];
 
   return (
-    <main className="min-h-screen bg-[#0b0e11] text-white font-sans">
+    <main className="min-h-screen bg-[#0b0e11] text-white font-sans selection:bg-green-500 selection:text-black">
       {/* HEADER / NAVBAR */}
       <header className="flex items-center justify-between px-6 py-4 border-b border-gray-900 bg-[#0b0e11]">
         <div className="flex items-center gap-8">
@@ -38,7 +38,7 @@ export default function Home() {
                 >
                   {item.name}
                   {item.hasApy && (
-                    <span className="ml-2 text-[10px] bg-green-950 text-green-400 px-1.5 py-0.5 rounded border border-green-900 font-semibold normal-case">
+                    <span className="ml-2 text-[10px] bg-green-950/80 text-green-400 px-1.5 py-0.5 rounded border border-green-900 font-semibold normal-case">
                       15% APY
                     </span>
                   )}
@@ -52,7 +52,7 @@ export default function Home() {
         </div>
 
         {/* Giả lập nút Connect Wallet / Số ví */}
-        <div className="bg-gray-900 border border-gray-800 rounded-lg px-3 py-1.5 text-xs font-mono text-green-400 max-w-[140px] truncate shadow-sm">
+        <div className="bg-gray-900/60 border border-gray-800 rounded-lg px-3 py-1.5 text-xs font-mono text-green-400 max-w-[140px] truncate shadow-sm">
           0x2F484e967b28879...
         </div>
       </header>
@@ -62,9 +62,9 @@ export default function Home() {
         {activeTab === 'TRADE' && (
           <>
             {/* Ticker / Thanh thông tin thị trường */}
-            <div className="flex flex-wrap items-center gap-6 mb-4 text-[11px] text-gray-400 bg-[#12161a] border border-gray-900 rounded-lg p-3">
+            <div className="flex flex-wrap items-center gap-6 mb-4 text-[11px] text-gray-400 bg-[#12161a]/40 border border-gray-900 rounded-lg p-3">
               <div className="font-bold text-white text-xs flex items-center gap-1.5">
-                MON / USDT <span className="text-red-500 font-normal bg-red-950 px-1 py-0.5 rounded text-[10px]">-1.70%</span>
+                MON / USDT <span className="text-red-500 font-normal bg-red-950/30 px-1 py-0.5 rounded text-[10px]">-1.70%</span>
               </div>
               <div>Index Price: <span className="text-white font-mono">0.02105</span></div>
               <div>Mark Price: <span className="text-white font-mono">0.02101</span></div>
@@ -81,41 +81,49 @@ export default function Home() {
                   MONUSDT • 15m • TradingView Stream
                 </div>
                 
-                {/* Đồ thị nến nội suy trực tiếp bằng HTML/CSS để tuyệt đối không lỗi build */}
+                {/* Đồ thị nến UI dựng trực tiếp bằng CSS đảm bảo hiển thị 100% không kẹt loading */}
                 <div className="w-full flex-grow flex flex-col justify-center">
-                  <div className="flex h-[380px] flex-col items-center justify-center bg-[#161a1e] rounded-lg p-4 relative overflow-hidden border border-gray-800">
-                    <div className="flex items-end gap-3 h-[220px] w-full max-w-xl justify-center px-4 relative z-10">
+                  <div className="flex h-[380px] flex-col items-center justify-center bg-[#161a1e] rounded-lg p-4 relative overflow-hidden border border-gray-800/40">
+                    {/* Giả lập lưới đồ thị */}
+                    <div className="absolute inset-0 grid grid-cols-6 grid-rows-6 pointer-events-none opacity-5">
+                      {[...Array(36)].map((_, i) => (
+                        <div key={i} className="border border-white"></div>
+                      ))}
+                    </div>
+
+                    <div className="flex items-end gap-4 h-[220px] w-full max-w-xl justify-center px-4 relative z-10">
                       <div className="flex flex-col items-center h-full justify-end w-6">
                         <div className="w-[2px] h-20 bg-green-500"></div>
-                        <div className="w-4 h-24 bg-green-500 rounded-sm"></div>
+                        <div className="w-4 h-24 bg-green-500/80 rounded-sm shadow-[0_0_8px_rgba(34,197,94,0.3)]"></div>
                         <div className="w-[2px] h-12 bg-green-500"></div>
                       </div>
                       <div className="flex flex-col items-center h-full justify-end w-6">
                         <div className="w-[2px] h-14 bg-red-500"></div>
-                        <div className="w-4 h-16 bg-red-500 rounded-sm"></div>
+                        <div className="w-4 h-16 bg-red-500/80 rounded-sm"></div>
                         <div className="w-[2px] h-8 bg-red-500"></div>
                       </div>
                       <div className="flex flex-col items-center h-full justify-end w-6">
                         <div className="w-[2px] h-10 bg-green-500"></div>
-                        <div className="w-4 h-32 bg-green-500 rounded-sm"></div>
+                        <div className="w-4 h-32 bg-green-500/80 rounded-sm shadow-[0_0_8px_rgba(34,197,94,0.3)]"></div>
                         <div className="w-[2px] h-16 bg-green-500"></div>
                       </div>
                       <div className="flex flex-col items-center h-full justify-end w-6">
                         <div className="w-[2px] h-24 bg-green-500"></div>
-                        <div className="w-4 h-12 bg-green-500 rounded-sm"></div>
+                        <div className="w-4 h-12 bg-green-500/80 rounded-sm shadow-[0_0_8px_rgba(34,197,94,0.3)]"></div>
                         <div className="w-[2px] h-10 bg-green-500"></div>
                       </div>
                       <div className="flex flex-col items-center h-full justify-end w-6">
                         <div className="w-[2px] h-12 bg-red-500"></div>
-                        <div className="w-4 h-28 bg-red-500 rounded-sm"></div>
+                        <div className="w-4 h-28 bg-red-500/80 rounded-sm"></div>
                         <div className="w-[2px] h-14 bg-red-500"></div>
                       </div>
                       <div className="flex flex-col items-center h-full justify-end w-6">
                         <div className="w-[2px] h-8 bg-green-500"></div>
-                        <div className="w-4 h-20 bg-green-500 rounded-sm"></div>
+                        <div className="w-4 h-20 bg-green-500/80 rounded-sm shadow-[0_0_8px_rgba(34,197,94,0.3)]"></div>
                         <div className="w-[2px] h-8 bg-green-500"></div>
                       </div>
                     </div>
+                    
                     <div className="mt-6 text-center z-10">
                       <div className="text-xs font-bold text-gray-200 tracking-wider uppercase mb-1">
                         Hybrid Candlestick Engine Active
@@ -131,14 +139,14 @@ export default function Home() {
               {/* Vùng hiển thị Margin Console */}
               <div className="bg-[#12161a] border border-gray-900 rounded-xl p-5 h-fit shadow-lg">
                 <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest mb-5 text-gray-200">
-                  <span className="w-2 h-2 rounded-full bg-green-400"></span>
+                  <span className="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.6)]"></span>
                   Margin Console
                 </div>
                 
                 <div className="space-y-4">
                   <div>
                     <label className="text-[10px] text-gray-400 block mb-1.5 uppercase tracking-wider font-semibold">Circle Faucet Asset</label>
-                    <select className="w-full bg-[#1b2026] border border-gray-800 rounded-lg p-2.5 text-xs text-white focus:outline-none cursor-pointer">
+                    <select className="w-full bg-[#1b2026] border border-gray-800 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-green-500/50 transition-colors cursor-pointer">
                       <option>Circle USDC</option>
                     </select>
                   </div>
@@ -152,13 +160,13 @@ export default function Home() {
                       <input 
                         type="number" 
                         defaultValue="1" 
-                        className="w-full bg-[#1b2026] border border-gray-800 rounded-lg p-2.5 text-xs text-white font-mono pr-12 focus:outline-none"
+                        className="w-full bg-[#1b2026] border border-gray-800 rounded-lg p-2.5 text-xs text-white font-mono pr-12 focus:outline-none focus:border-green-500/50 transition-colors"
                       />
                       <span className="absolute right-3 top-3 text-[10px] text-gray-500 font-bold tracking-tight">USDC</span>
                     </div>
                   </div>
 
-                  <button type="button" className="w-full bg-green-500 hover:bg-green-400 text-slate-950 font-black py-3 rounded-lg text-xs uppercase tracking-widest mt-2 shadow-md">
+                  <button type="button" className="w-full bg-green-500 hover:bg-green-400 active:scale-[0.99] text-slate-950 font-black py-3 rounded-lg text-xs transition-all duration-150 uppercase tracking-widest mt-2 shadow-md shadow-green-500/10">
                     Confirm Cross Margin Deposit
                   </button>
                 </div>
