@@ -1,4 +1,4 @@
-
+import './globals.css';
 export const metadata = {
   title: 'Arc Perp DEX (GRVT Pro Mode)',
   description: 'Hybrid Perpetual DEX on Arc Testnet',
