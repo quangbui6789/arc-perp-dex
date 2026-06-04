@@ -129,7 +129,7 @@ export default function Home() {
       setTimeout(() => getOnChainBalance(walletAddress), 3500);
     } catch (error: any) {
       alert(`Giao dịch thất bại: ${error.message}`);
-    } compression: {
+    } finally {
       setTxLoading(false);
     }
   };
@@ -360,7 +360,7 @@ export default function Home() {
               </div>
 
               <div className="pt-2">
-                <input type="range" min="0" max="100" defaultValue="25" onChange={() => {}} className="w-full accent-emerald-500 cursor-pointer" />
+                <input type="range" min="0" max="100" defaultValue="25" className="w-full accent-emerald-500 cursor-pointer" />
                 <div className="flex justify-between text-[10px] text-gray-600 mt-1"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>
               </div>
 
