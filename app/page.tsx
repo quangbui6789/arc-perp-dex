@@ -43,10 +43,10 @@ export default function Home() {
   const [orderType, setOrderType] = useState<'BUY' | 'SELL'>('BUY');
   const [marginType, setMarginType] = useState<'Cross' | 'Isolated'>('Isolated');
   const [leverage] = useState(40);
-  const [priceInput, setPriceInput] = useState('63822.7');
+  const [priceInput, setPriceInput] = useState('63500.0');
   const [qtyInput, setQtyInput] = useState('0.1');
-  const [marketPrice, setMarketPrice] = useState(63822.7);
-  const [priceChange] = useState(-5.03);
+  const [marketPrice, setMarketPrice] = useState(63500.0);
+  const [priceChange] = useState(-5.54);
 
   const [positions, setPositions] = useState<Position[]>([]);
   const [asks, setAsks] = useState<OrderBookRow[]>([]);
@@ -102,6 +102,10 @@ export default function Home() {
     e.preventDefault();
     if (!isConnected) return connectWallet();
 
+    const p = parseFloat(priceInput);
+    const q = parseFloat(qtyInput);
+    if (isNaN(p) || isNaN(q) || q <= 0) return;
+
     setTxLoading(true);
     try {
       const ethereum = (window as any).ethereum;
@@ -121,7 +125,7 @@ export default function Home() {
         size: `${qtyInput} BTC`,
         entryPrice: parseFloat(priceInput).toFixed(1),
         markPrice: marketPrice.toFixed(1),
-        pnl: orderType === 'BUY' ? 12.50 : -8.40,
+        pnl: orderType === 'BUY' ? 28.88 : -15.40,
         txHash: txHash
       };
 
@@ -135,16 +139,22 @@ export default function Home() {
   };
 
   useEffect(() => {
+    const basePrice = 63500.0;
     const interval = setInterval(() => {
       setMarketPrice(prev => {
-        const change = (Math.random() - 0.5) * 6;
+        const change = (Math.random() - 0.5) * 10;
         const nextPrice = prev + change;
 
         const generatedAsks: OrderBookRow[] = [];
         const generatedBids: OrderBookRow[] = [];
         for (let i = 1; i <= 8; i++) {
-          generatedAsks.push({ price: nextPrice + (i * 1.5), size: Math.random() * 2, total: Math.random() * 25 });
-          generatedBids.push({ price: nextPrice - (i * 1.5), size: Math.random() * 2, total: Math.random() * 25 });
+          const pSell = basePrice + (i * 3.5);
+          const qSell = Math.random() * 2 + 0.1;
+          generatedAsks.push({ price: pSell, size: qSell, total: pSell * qSell });
+
+          const pBuy = basePrice - (i * 3.5);
+          const qBuy = Math.random() * 2 + 0.1;
+          generatedBids.push({ price: pBuy, size: qBuy, total: pBuy * qBuy });
         }
         setAsks(generatedAsks.reverse());
         setBids(generatedBids);
@@ -156,7 +166,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#090b0d] text-[#e1e3e6] font-sans text-xs antialiased flex flex-col">
+    <div className="min-h-screen bg-[#090b0d] text-[#e1e3e6] font-sans text-xs antialiased flex flex-col select-none">
       
       {/* GLOBAL TOP NAVIGATION */}
       <header className="h-12 bg-[#0c0e12] border-b border-[#161a22] flex items-center justify-between px-4 sticky top-0 z-50">
@@ -217,8 +227,8 @@ export default function Home() {
           <span className={priceChange >= 0 ? 'text-emerald-500' : 'text-red-500'}>{priceChange}%</span>
         </div>
         <div><span className="text-gray-500">Mark Price:</span> <span className="text-white">${marketPrice.toFixed(1)}</span></div>
-        <div className="hidden lg:block"><span className="text-gray-500">Open Interest:</span> <span className="text-white">171,753,926.6</span></div>
-        <div className="hidden lg:block"><span className="text-gray-500">Funding / Countdown:</span> <span className="text-emerald-400">+0.0100% / 02:43:08</span></div>
+        <div className="hidden lg:block"><span className="text-gray-500">Open Interest:</span> <span className="text-white">170,178,300.1</span></div>
+        <div className="hidden lg:block"><span className="text-gray-500">Funding / Countdown:</span> <span className="text-emerald-400">+0.0100% / 00:39:16</span></div>
       </div>
 
       {/* MAIN WORKSPACE */}
@@ -326,7 +336,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* PHẢI: CONSOLE ĐIỀU KHIỂN CHUẨN GRVT */}
+        {/* RIGHT: CONTROL BOX */}
         <div className="xl:col-span-3 bg-[#0c0e12] border-t xl:border-t-0 border-l border-[#161a22] p-4 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-4 font-mono">
