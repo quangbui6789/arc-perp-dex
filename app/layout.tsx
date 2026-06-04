@@ -1,4 +1,3 @@
-import './globals.css';
 
 export const metadata = {
   title: 'Arc Perp DEX (GRVT Pro Mode)',
