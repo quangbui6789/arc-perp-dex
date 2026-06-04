@@ -26,7 +26,7 @@ export default function Home() {
     ETH: 2.50
   });
 
-  // Quản lý cặp giao dịch (Mặc định chọn BTC/USDT giống GRVT)
+  // Quản lý cặp giao dịch (Mặc định chọn BTC/USDC giống GRVT)
   const [currentPair, setCurrentPair] = useState('BTC/USDC');
   const [showPairSelector, setShowPairSelector] = useState(false);
 
@@ -52,11 +52,13 @@ export default function Home() {
     for (let i = 1; i <= 5; i++) {
       const pSell = basePrice + (i * 3.5);
       const qSell = Math.random() * 2 + 0.1;
-      sells.push({ price: pSell, quantity: qSell, total: pSell * qSell });
+      // Đã Sửa Lỗi: Thêm thuộc tính type: 'sell' ở đây
+      sells.push({ price: pSell, quantity: qSell, total: pSell * qSell, type: 'sell' });
 
       const pBuy = basePrice - (i * 3.5);
       const qBuy = Math.random() * 2 + 0.1;
-      buys.push({ price: pBuy, quantity: qBuy, total: pBuy * qBuy });
+      // Đã Sửa Lỗi: Thêm thuộc tính type: 'buy' ở đây
+      buys.push({ price: pBuy, quantity: qBuy, total: pBuy * qBuy, type: 'buy' });
     }
     setSellOrders(sells.reverse()); // Sắp xếp giá giảm dần ở phe bán
     setBuyOrders(buys);
@@ -129,7 +131,6 @@ export default function Home() {
 
         {/* Cụm ví + Circle Faucet Panel */}
         <div className="flex items-center gap-3">
-          {/* Quick Faucet Dropdown */}
           <div className="flex items-center bg-[#161c22] border border-[#252f3b] rounded-lg px-2 py-1 gap-2">
             <span className="text-[10px] text-gray-400 uppercase font-mono font-bold">Circle Faucet:</span>
             <button onClick={() => handleFaucet('USDC')} className="text-[10px] bg-[#222a35] hover:bg-emerald-500 hover:text-black font-mono px-1.5 py-0.5 rounded transition-colors">+USDC</button>
@@ -154,7 +155,7 @@ export default function Home() {
               </button>
               {showDisconnectMenu && (
                 <div className="absolute right-0 mt-1 w-40 bg-[#12161a] border border-[#252f3b] rounded-lg p-1 shadow-2xl">
-                  <button onClick={disconnectWallet} className="w-full text-left text-red-400 hover:bg-red-950/30 px-3 py-2 rounded-md transition-colors font-medium">
+                  <button onClick={() => { setIsConnected(false); setShowDisconnectMenu(false); }} className="w-full text-left text-red-400 hover:bg-red-950/30 px-3 py-2 rounded-md transition-colors font-medium">
                     Disconnect
                   </button>
                 </div>
@@ -171,7 +172,6 @@ export default function Home() {
           {/* 1. TICKER BAR */}
           <div className="flex items-center justify-between bg-[#0d1013] px-4 py-2 border-b border-[#1c2229] flex-wrap gap-4">
             <div className="flex items-center gap-6">
-              {/* Asset Selector Dropdown */}
               <div className="relative">
                 <div 
                   onClick={() => setShowPairSelector(!showPairSelector)}
@@ -188,7 +188,6 @@ export default function Home() {
                 )}
               </div>
 
-              {/* Ticker Stats */}
               <div className="flex items-center gap-5 text-[11px] font-mono">
                 <div><span className={currentPair === 'BTC/USDC' ? "text-emerald-400 text-sm font-bold" : "text-red-400 text-sm font-bold"}>{currentPair === 'BTC/USDC' ? '63,822.7' : '3,450.5'}</span> <span className="text-red-500 text-[10px]">-5.03%</span></div>
                 <div className="hidden sm:block text-gray-500">Mark <span className="text-gray-300">{currentPair === 'BTC/USDC' ? '63,838.6' : '3,451.2'}</span></div>
@@ -198,7 +197,6 @@ export default function Home() {
               </div>
             </div>
             
-            {/* Wallet Quick Balance Display */}
             <div className="text-[11px] font-mono text-gray-400 flex items-center gap-4 bg-[#12161a] px-3 py-1 rounded border border-[#1c2229]">
               <div>USDC: <span className="text-white font-bold">{balances.USDC.toFixed(2)}</span></div>
               <div>BTC: <span className="text-white font-bold">{balances.BTC.toFixed(3)}</span></div>
@@ -209,10 +207,9 @@ export default function Home() {
           {/* 2. GRID WORKSPACE LAYOUT */}
           <div className="grid grid-cols-1 xl:grid-cols-12 h-[calc(100vh-85px)] overflow-hidden">
             
-            {/* CỘT TRÁI + GIỮA: CHART VÀ ORDER BOOK (9/12) */}
+            {/* CỘT TRÁI + GIỮA: CHART VÀ ORDER BOOK */}
             <div className="xl:col-span-9 flex flex-col border-r border-[#1c2229] overflow-y-auto">
               
-              {/* VÙNG BIỂU ĐỒ NẾN MOCKUP CHUẨN TỶ LỆ */}
               <div className="p-4 bg-[#090b0d] border-b border-[#1c2229] flex-grow flex flex-col justify-between min-h-[360px]">
                 <div className="flex items-center justify-between text-gray-500 text-[10px] font-mono border-b border-[#12161a] pb-2 mb-2">
                   <div className="flex items-center gap-3">
@@ -222,14 +219,11 @@ export default function Home() {
                   <div className="text-gray-400 font-bold">● Live Connection Active</div>
                 </div>
 
-                {/* Phần thân mô phỏng chart đồ thị */}
                 <div className="w-full flex-grow flex items-end justify-center gap-4 pb-6 pt-4 relative bg-[#0b0e12] rounded-lg border border-[#13181f]">
-                  {/* Grid Lines làm mờ nền */}
                   <div className="absolute inset-0 grid grid-cols-8 grid-rows-6 pointer-events-none opacity-5">
                     {[...Array(48)].map((_, i) => <div key={i} className="border border-white"></div>)}
                   </div>
                   
-                  {/* Cột nến động thay đổi linh hoạt */}
                   <div className="flex items-end gap-3 h-[200px] relative z-10 font-mono text-[9px] text-gray-600">
                     <div className="flex flex-col items-center justify-end h-full"><div className="w-[1px] h-12 bg-red-500"></div><div className="w-5 h-20 bg-red-500/80 rounded-sm"></div></div>
                     <div className="flex flex-col items-center justify-end h-full"><div className="w-[1px] h-24 bg-green-500"></div><div className="w-5 h-28 bg-green-500/80 rounded-sm"></div></div>
@@ -240,7 +234,7 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* SỔ LỆNH ORDER BOOK KÉP (NẰM DƯỚI CHART CHUẨN GRVT) */}
+              {/* SỔ LỆNH ORDER BOOK KÉP */}
               <div className="p-4 bg-[#0d1013] flex-grow">
                 <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                   <span>📊 Order Book / Market Liquidity</span>
@@ -248,7 +242,6 @@ export default function Home() {
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 font-mono text-xs">
-                  {/* Bên lệnh bán (Asks - Màu đỏ) */}
                   <div>
                     <div className="text-red-400 font-bold mb-1.5 border-b border-[#252f3b] pb-1">🛑 Sell Orders (Asks)</div>
                     <table className="w-full text-left">
@@ -261,7 +254,6 @@ export default function Home() {
                     </table>
                   </div>
 
-                  {/* Bên lệnh mua (Bids - Màu xanh) */}
                   <div>
                     <div className="text-emerald-400 font-bold mb-1.5 border-b border-[#252f3b] pb-1">🟢 Buy Orders (Bids)</div>
                     <table className="w-full text-left">
@@ -278,10 +270,9 @@ export default function Home() {
 
             </div>
 
-            {/* CỘT PHẢI: KHUNG ĐẶT LỆNH GIAO DỊCH CHUYÊN NGHIỆP (3/12) */}
+            {/* CỘT PHẢI: KHUNG ĐẶT LỆNH GIAO DỊCH */}
             <div className="xl:col-span-3 bg-[#0d1013] p-4 flex flex-col justify-between overflow-y-auto">
               <div>
-                {/* Margin Type & Leverage Selector */}
                 <div className="flex gap-2 mb-4">
                   <select className="flex-1 bg-[#161c22] border border-[#252f3b] text-white p-2 rounded-lg text-xs font-bold focus:outline-none">
                     <option>Isolated Margin</option>
@@ -296,13 +287,11 @@ export default function Home() {
                   </select>
                 </div>
 
-                {/* Tab Mua / Bán */}
                 <div className="flex bg-[#161c22] p-1 rounded-lg mb-4 border border-[#1f2730]">
                   <button onClick={() => setOrderType('BUY')} className={`flex-1 text-center py-2 text-xs font-black rounded-md uppercase transition-all ${orderType === 'BUY' ? 'bg-emerald-500 text-black shadow-md' : 'text-gray-400 hover:text-white'}`}>Buy / Long</button>
                   <button onClick={() => setOrderType('SELL')} className={`flex-1 text-center py-2 text-xs font-black rounded-md uppercase transition-all ${orderType === 'SELL' ? 'bg-red-500 text-white shadow-md' : 'text-gray-400 hover:text-white'}`}>Sell / Short</button>
                 </div>
 
-                {/* Form Nhập Giá / Số lượng */}
                 <form onSubmit={handlePlaceOrder} className="space-y-4">
                   <div>
                     <div className="flex justify-between text-gray-400 mb-1 text-[11px]"><span>Price</span><span>USDC</span></div>
@@ -314,20 +303,17 @@ export default function Home() {
                     <input type="number" step="any" value={qtyInput} onChange={(e) => setQtyInput(e.target.value)} className="w-full bg-[#161c22] border border-[#252f3b] text-white p-2.5 rounded-lg text-xs font-mono focus:outline-none focus:border-emerald-500/50" />
                   </div>
 
-                  {/* Thanh kéo tỷ lệ phần trăm lệnh */}
                   <div className="flex justify-between gap-1 pt-1">
                     {['25%', '50%', '75%', '100%'].map((pct) => (
                       <button key={pct} type="button" className="flex-1 bg-[#1c2229] hover:bg-[#252f3b] text-gray-400 py-1 rounded text-[10px] font-mono transition-colors">{pct}</button>
                     ))}
                   </div>
 
-                  {/* Bảng tính toán thông số lệnh ký quỹ */}
                   <div className="bg-[#161c22] p-3 rounded-lg border border-[#1f2730] text-[11px] font-mono space-y-1.5 text-gray-400">
                     <div className="flex justify-between"><span>Order Value:</span><span className="text-white">{(parseFloat(priceInput || '0') * parseFloat(qtyInput || '0')).toFixed(2)} USDC</span></div>
                     <div className="flex justify-between"><span>Margin Requirement:</span><span className="text-emerald-400">{((parseFloat(priceInput || '0') * parseFloat(qtyInput || '0')) / parseInt(leverage)).toFixed(2)} USDC</span></div>
                   </div>
 
-                  {/* Nút Đặt Lệnh Thực Thi */}
                   <button type="submit" className={`w-full py-3 rounded-lg text-xs font-black uppercase tracking-wider transition-all active:scale-[0.99] shadow-lg ${orderType === 'BUY' ? 'bg-emerald-500 hover:bg-emerald-400 text-black' : 'bg-red-500 hover:bg-red-400 text-white'}`}>
                     {orderType === 'BUY' ? '🟢 Execute Open Long' : '🛑 Execute Open Short'}
                   </button>
