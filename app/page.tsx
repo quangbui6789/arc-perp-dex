@@ -8,6 +8,7 @@ interface OrderRow {
   quantity: number;
   total: number;
   type: 'buy' | 'sell';
+  isUser?: boolean;
 }
 
 export default function Home() {
@@ -19,72 +20,118 @@ export default function Home() {
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [showDisconnectMenu, setShowDisconnectMenu] = useState(false);
 
-  // Số dư 3 đồng coin Faucet trên Circle Testnet
-  const [balances, setBalances] = useState({
-    USDC: 10000.00,
-    BTC: 0.50,
-    ETH: 2.50
+  // 1. Số dư tại VÍ WEB3 (Dùng để nhận từ Faucet)
+  const [walletBalances, setWalletBalances] = useState({
+    USDC: 5000.00,
+    EURC: 2000.00,
+    btc: 0.25
   });
 
-  // Quản lý cặp giao dịch (Mặc định chọn BTC/USDC giống GRVT)
-  const [currentPair, setCurrentPair] = useState('BTC/USDC');
+  // 2. Số dư tại TÀI KHOẢN SÀN (Dùng để giao dịch sau khi DEPOSIT)
+  const [accountBalances, setAccountBalances] = useState({
+    USDC: 1000.00,
+    EURC: 0.00,
+    btc: 0.05
+  });
+
+  // Quản lý các Modal chức năng
+  const [showDepositModal, setShowDepositModal] = useState(false);
+  const [showTransferModal, setShowTransferModal] = useState(false);
+
+  // State xử lý Form Nạp tiền (Deposit)
+  const [depositAsset, setDepositAsset] = useState<'USDC' | 'EURC' | 'btc'>('USDC');
+  const [depositAmount, setDepositAmount] = useState('500');
+
+  // State xử lý Form Chuyển tiền (Transfer)
+  const [transferAsset, setTransferAsset] = useState<'USDC' | 'EURC' | 'btc'>('USDC');
+  const [transferAmount, setTransferAmount] = useState('100');
+  const [transferTo, setTransferTo] = useState('');
+
+  // Quản lý cặp giao dịch (Hỗ trợ btc/USDC và EURC/USDC)
+  const [currentPair, setCurrentPair] = useState('btc/USDC');
   const [showPairSelector, setShowPairSelector] = useState(false);
 
-  // Quản lý Form Đặt Lệnh
+  // Quản lý Form Đặt Lệnh Trade
   const [orderType, setOrderType] = useState<'BUY' | 'SELL'>('BUY');
-  const [priceInput, setPriceInput] = useState('63902.4');
-  const [qtyInput, setQtyInput] = useState('0.5');
-  const [leverage, setLeverage] = useState('40x');
+  const [priceInput, setPriceInput] = useState('63822.0');
+  const [qtyInput, setQtyInput] = useState('0.1');
+  const [leverage, setLeverage] = useState('20x');
 
-  // Dữ liệu Sổ Lệnh (Order Book) chia 2 phần sâu chuỗi
+  // Dữ liệu Sổ Lệnh (Order Book)
   const [sellOrders, setSellOrders] = useState<OrderRow[]>([]);
   const [buyOrders, setBuyOrders] = useState<OrderRow[]>([]);
 
-  // Thiết lập thông số giá mặc định theo cặp tiền
+  // Cập nhật giá sàn theo cặp tiền được chọn
   useEffect(() => {
-    const basePrice = currentPair === 'BTC/USDC' ? 63822.7 : 3450.5;
-    setPriceInput(basePrice.toFixed(1));
+    const basePrice = currentPair === 'btc/USDC' ? 63822.7 : 1.08;
+    setPriceInput(basePrice.toFixed(currentPair === 'btc/USDC' ? 1 : 4));
 
-    // Khởi tạo Order book động giả lập đúng biên độ của sàn
     const sells: OrderRow[] = [];
     const buys: OrderRow[] = [];
     
     for (let i = 1; i <= 5; i++) {
-      const pSell = basePrice + (i * 3.5);
-      const qSell = Math.random() * 2 + 0.1;
-      // Đã Sửa Lỗi: Thêm thuộc tính type: 'sell' ở đây
+      const diff = currentPair === 'btc/USDC' ? i * 4.5 : i * 0.0002;
+      const pSell = basePrice + diff;
+      const qSell = Math.random() * (currentPair === 'btc/USDC' ? 1.5 : 500) + 0.1;
       sells.push({ price: pSell, quantity: qSell, total: pSell * qSell, type: 'sell' });
 
-      const pBuy = basePrice - (i * 3.5);
-      const qBuy = Math.random() * 2 + 0.1;
-      // Đã Sửa Lỗi: Thêm thuộc tính type: 'buy' ở đây
+      const pBuy = basePrice - diff;
+      const qBuy = Math.random() * (currentPair === 'btc/USDC' ? 1.5 : 500) + 0.1;
       buys.push({ price: pBuy, quantity: qBuy, total: pBuy * qBuy, type: 'buy' });
     }
-    setSellOrders(sells.reverse()); // Sắp xếp giá giảm dần ở phe bán
+    setSellOrders(sells.reverse());
     setBuyOrders(buys);
   }, [currentPair]);
 
-  // Hàm xử lý Faucet nhận thêm 3 đồng coin testnet
-  const handleFaucet = (token: 'USDC' | 'BTC' | 'ETH') => {
+  // Kích hoạt Faucet nhận coin trực tiếp về Ví Web3
+  const handleFaucet = (token: 'USDC' | 'EURC' | 'btc') => {
     if (!isConnected) {
       setShowConnectModal(true);
       return;
     }
-    const amounts = { USDC: 5000, BTC: 0.1, ETH: 0.5 };
-    setBalances(prev => ({
+    const amounts = { USDC: 2500, EURC: 1000, btc: 0.05 };
+    setWalletBalances(prev => ({
       ...prev,
       [token]: prev[token] + amounts[token]
     }));
-    alert(`🎁 Đã Faucet thành công ${amounts[token]} ${token} từ Circle Testnet Network!`);
+    alert(`🎁 Faucet thành công! Đã thêm ${amounts[token]} ${token} vào Ví Web3 của bạn.`);
   };
 
-  const connectWallet = (provider: string) => {
-    setWalletAddress(provider === 'metamask' ? '0x2F484e967b28879A81110bC3E1492582846fDe80' : '0x99A61e957b28879A81110bC3E1492582235284ac');
-    setIsConnected(true);
-    setShowConnectModal(false);
+  // Kích hoạt nạp tiền từ Ví Web3 vào tài khoản sàn (Deposit)
+  const handleDepositSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const amt = parseFloat(depositAmount);
+    if (isNaN(amt) || amt <= 0) return;
+
+    if (walletBalances[depositAsset] < amt) {
+      alert(`Số dư trên Ví Web3 không đủ để nạp ${amt} ${depositAsset}! Hãy dùng Faucet trước.`);
+      return;
+    }
+
+    // Trừ ví Web3, cộng vào ví sàn giao dịch
+    setWalletBalances(prev => ({ ...prev, [depositAsset]: prev[depositAsset] - amt }));
+    setAccountBalances(prev => ({ ...prev, [depositAsset]: prev[depositAsset] + amt }));
+    setShowDepositModal(false);
+    alert(`💰 Đã nạp thành công ${amt} ${depositAsset} vào tài khoản giao dịch GRVT!`);
   };
 
-  // Logic Đặt Lệnh Khớp Vào Sổ Lệnh
+  // Kích hoạt chuyển coin đến ví khác (Transfer)
+  const handleTransferSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const amt = parseFloat(transferAmount);
+    if (isNaN(amt) || amt <= 0 || !transferTo) return;
+
+    if (accountBalances[transferAsset] < amt) {
+      alert(`Số dư trên tài khoản sàn không đủ ${amt} ${transferAsset} để chuyển đi!`);
+      return;
+    }
+
+    setAccountBalances(prev => ({ ...prev, [transferAsset]: prev[transferAsset] - amt }));
+    setShowTransferModal(false);
+    alert(`💸 Đã chuyển ${amt} ${transferAsset} đến địa chỉ: ${transferTo} thành công.`);
+  };
+
+  // Xử lý đặt lệnh Trade (Khớp trực tiếp kiểm tra số dư Account Balances)
   const handlePlaceOrder = (e: React.FormEvent) => {
     e.preventDefault();
     if (!isConnected) {
@@ -94,48 +141,65 @@ export default function Home() {
 
     const p = parseFloat(priceInput);
     const q = parseFloat(qtyInput);
-    if (isNaN(p) || isNaN(q)) return;
+    if (isNaN(p) || isNaN(q) || q <= 0) return;
 
-    const newRow: OrderRow = { price: p, quantity: q, total: p * q, type: orderType === 'BUY' ? 'buy' : 'sell' };
+    const totalCost = p * q;
+    const levMultiplier = parseInt(leverage);
 
     if (orderType === 'BUY') {
-      if (balances.USDC < p * q / 40) { alert('Không đủ số dư USDC testnet (đã tính leverage)!'); return; }
+      const requiredMargin = totalCost / levMultiplier;
+      if (accountBalances.USDC < requiredMargin) {
+        alert(`Thất bại: Tài khoản sàn cần tối thiểu ${requiredMargin.toFixed(2)} USDC làm ký quỹ Margin! Vui lòng bấm NẠP COIN.`);
+        return;
+      }
+      // Trừ tiền ký quỹ và đẩy lệnh vào sổ
+      setAccountBalances(prev => ({ ...prev, USDC: prev.USDC - requiredMargin }));
+      const newRow: OrderRow = { price: p, quantity: q, total: totalCost, type: 'buy', isUser: true };
       setBuyOrders(prev => [newRow, ...prev.slice(0, 4)]);
-      setBalances(prev => ({ ...prev, USDC: prev.USDC - (p * q / 40) }));
     } else {
-      const token = currentPair.split('/')[0] as 'BTC' | 'ETH';
-      if (balances[token] < q) { alert(`Không đủ số dư ${token} testnet để đặt lệnh Short!`); return; }
+      // Khớp lệnh Short/Sell
+      const token = currentPair.split('/')[0] as 'btc' | 'EURC';
+      if (accountBalances[token] < q) {
+        alert(`Thất bại: Tài khoản sàn của bạn không đủ ${q} ${token} để thực hiện lệnh vị thế bán!`);
+        return;
+      }
+      setAccountBalances(prev => ({ ...prev, [token]: prev[token] - q }));
+      const newRow: OrderRow = { price: p, quantity: q, total: totalCost, type: 'sell', isUser: true };
       setSellOrders(prev => [...prev.slice(1), newRow]);
-      setBalances(prev => ({ ...prev, [token]: prev[token] - q }));
     }
 
-    alert(`🚀 Lệnh ${orderType} ${q} ${currentPair.split('/')[0]} ở giá ${p} đã được đẩy lên Sổ lệnh sàn GRVT clone!`);
+    alert(`🚀 Đặt lệnh ${orderType} hoàn tất! Dữ liệu vị thế đã cập nhật vào Sổ Lệnh.`);
+  };
+
+  const connectWallet = (provider: string) => {
+    setWalletAddress(provider === 'metamask' ? '0x2F484e967b28879A81110bC3E1492582846fDe80' : '0x99A61e957b28879A81110bC3E1492582235284ac');
+    setIsConnected(true);
+    setShowConnectModal(false);
   };
 
   return (
-    <main className="min-h-screen bg-[#090b0d] text-[#e1e3e6] font-sans antialiased text-xs select-none">
+    <main className="min-h-screen bg-[#090b0d] text-[#e1e3e6] font-sans antialiased text-xs select-none relative">
       
-      {/* TOP NAVIGATION BAR (Chuẩn GRVT) */}
-      <header className="flex items-center justify-between px-4 py-2 bg-[#0d1013] border-b border-[#1c2229] relative z-50">
+      {/* HEADER BAR */}
+      <header className="flex items-center justify-between px-4 py-2 bg-[#0d1013] border-b border-[#1c2229] relative z-40">
         <div className="flex items-center gap-6">
-          <div className="flex items-center gap-1 font-black text-sm tracking-tight text-white cursor-pointer">
-            <span className="text-emerald-400 text-base">⬢</span> grvt <span className="text-[10px] text-gray-500 font-mono font-normal ml-1">clone</span>
+          <div className="flex items-center gap-1 font-black text-sm text-white cursor-pointer">
+            <span className="text-emerald-400 text-base">⬢</span> grvt <span className="text-[10px] text-gray-500 font-mono font-normal ml-1">sandbox</span>
           </div>
           <nav className="flex items-center gap-5 font-medium text-gray-400">
             <button onClick={() => setActiveTab('TRADE')} className={`hover:text-white ${activeTab === 'TRADE' && 'text-white font-bold'}`}>Trade</button>
-            <button onClick={() => setActiveTab('INVEST')} className={`hover:text-white relative ${activeTab === 'INVEST' && 'text-white font-bold'}`}>Invest <span className="text-[9px] bg-yellow-500/10 text-yellow-500 px-1 py-0.2 rounded ml-1 font-mono">15% APY</span></button>
-            <button onClick={() => setActiveTab('EARN')} className={`hover:text-white ${activeTab === 'EARN' && 'text-white font-bold'}`}>Earn <span className="text-[9px] bg-green-500/10 text-green-400 px-1 py-0.2 rounded ml-1 font-mono">11% APY</span></button>
-            <button onClick={() => setActiveTab('PORTFOLIO')} className={`hover:text-white ${activeTab === 'PORTFOLIO' && 'text-white font-bold'}`}>Portfolio</button>
+            <button onClick={() => setShowDepositModal(true)} className="hover:text-emerald-400 text-emerald-500 font-bold">📥 Nạp Coin (Deposit)</button>
+            <button onClick={() => setShowTransferModal(true)} className="hover:text-blue-400 text-blue-500 font-bold">💸 Chuyển Coin (Transfer)</button>
           </nav>
         </div>
 
-        {/* Cụm ví + Circle Faucet Panel */}
+        {/* CIRCLE FAUCET ENGINE CONTROL PANEL */}
         <div className="flex items-center gap-3">
           <div className="flex items-center bg-[#161c22] border border-[#252f3b] rounded-lg px-2 py-1 gap-2">
-            <span className="text-[10px] text-gray-400 uppercase font-mono font-bold">Circle Faucet:</span>
-            <button onClick={() => handleFaucet('USDC')} className="text-[10px] bg-[#222a35] hover:bg-emerald-500 hover:text-black font-mono px-1.5 py-0.5 rounded transition-colors">+USDC</button>
-            <button onClick={() => handleFaucet('BTC')} className="text-[10px] bg-[#222a35] hover:bg-yellow-500 hover:text-black font-mono px-1.5 py-0.5 rounded transition-colors">+BTC</button>
-            <button onClick={() => handleFaucet('ETH')} className="text-[10px] bg-[#222a35] hover:bg-blue-500 hover:text-black font-mono px-1.5 py-0.5 rounded transition-colors">+ETH</button>
+            <span className="text-[10px] text-gray-400 font-mono font-bold">Circle Faucet:</span>
+            <button onClick={() => handleFaucet('USDC')} className="text-[10px] bg-[#222a35] hover:bg-emerald-500 hover:text-black font-mono px-1.5 py-0.5 rounded transition-colors">+ USDC</button>
+            <button onClick={() => handleFaucet('EURC')} className="text-[10px] bg-[#222a35] hover:bg-blue-500 hover:text-black font-mono px-1.5 py-0.5 rounded transition-colors">+ EURC</button>
+            <button onClick={() => handleFaucet('btc')} className="text-[10px] bg-[#222a35] hover:bg-yellow-500 hover:text-black font-mono px-1.5 py-0.5 rounded transition-colors">+ btc</button>
           </div>
 
           {!isConnected ? (
@@ -149,12 +213,12 @@ export default function Home() {
             <div className="relative">
               <button
                 onClick={() => setShowDisconnectMenu(!showDisconnectMenu)}
-                className="bg-[#161c22] border border-[#252f3b] rounded-lg px-3 py-1.5 font-mono text-emerald-400 hover:bg-[#1f2730] transition-colors flex items-center gap-2"
+                className="bg-[#161c22] border border-[#252f3b] rounded-lg px-3 py-1.5 font-mono text-emerald-400 hover:bg-[#1f2730] flex items-center gap-2"
               >
                 {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
               </button>
               {showDisconnectMenu && (
-                <div className="absolute right-0 mt-1 w-40 bg-[#12161a] border border-[#252f3b] rounded-lg p-1 shadow-2xl">
+                <div className="absolute right-0 mt-1 w-40 bg-[#12161a] border border-[#252f3b] rounded-lg p-1 shadow-2xl z-50">
                   <button onClick={() => { setIsConnected(false); setShowDisconnectMenu(false); }} className="w-full text-left text-red-400 hover:bg-red-950/30 px-3 py-2 rounded-md transition-colors font-medium">
                     Disconnect
                   </button>
@@ -165,11 +229,27 @@ export default function Home() {
         </div>
       </header>
 
-      {/* CHỨC NĂNG CHÍNH: GIAO DIỆN TRADE KHỚP 100% GRVT */}
+      {/* DASHBOARD QUẢN LÝ TÀI SẢN (HIỂN THỊ ĐỒNG BỘ 2 KHO) */}
+      <div className="bg-[#11151a] border-b border-[#1c2229] px-4 py-2 grid grid-cols-1 md:grid-cols-2 gap-4 text-[11px] font-mono">
+        <div className="flex flex-wrap items-center gap-4 text-gray-400">
+          <span className="text-gray-200 font-bold">🦊 1. Số dư trên Ví Web3 (Chờ nạp):</span>
+          <div>USDC: <span className="text-white font-bold">{walletBalances.USDC.toFixed(2)}</span></div>
+          <div>EURC: <span className="text-white font-bold">{walletBalances.EURC.toFixed(2)}</span></div>
+          <div>btc: <span className="text-white font-bold">{walletBalances.btc.toFixed(4)}</span></div>
+        </div>
+        <div className="flex flex-wrap items-center gap-4 text-emerald-400 border-t md:border-t-0 md:border-l border-[#252f3b] md:pl-4">
+          <span className="text-gray-200 font-bold">🏦 2. Số dư TK Sàn (Có thể trade):</span>
+          <div>USDC: <span className="text-white font-bold">{accountBalances.USDC.toFixed(2)}</span></div>
+          <div>EURC: <span className="text-white font-bold">{accountBalances.EURC.toFixed(2)}</span></div>
+          <div>btc: <span className="text-white font-bold">{accountBalances.btc.toFixed(4)}</span></div>
+        </div>
+      </div>
+
+      {/* GIAO DIỆN TRADE CHUẨN GRVT */}
       {activeTab === 'TRADE' && (
         <div className="flex flex-col">
           
-          {/* 1. TICKER BAR */}
+          {/* TICKER STATS BAR */}
           <div className="flex items-center justify-between bg-[#0d1013] px-4 py-2 border-b border-[#1c2229] flex-wrap gap-4">
             <div className="flex items-center gap-6">
               <div className="relative">
@@ -177,46 +257,37 @@ export default function Home() {
                   onClick={() => setShowPairSelector(!showPairSelector)}
                   className="flex items-center gap-2 cursor-pointer bg-[#161c22] hover:bg-[#1f2730] px-3 py-1 rounded border border-[#252f3b]"
                 >
-                  <span className="font-bold text-white text-sm tracking-tight">{currentPair}</span>
-                  <span className="text-[10px] text-gray-500">Perpetual ▼</span>
+                  <span className="font-bold text-white text-sm font-mono tracking-tight">{currentPair}</span>
+                  <span className="text-[10px] text-gray-500">▼</span>
                 </div>
                 {showPairSelector && (
                   <div className="absolute top-9 left-0 w-44 bg-[#12161a] border border-[#252f3b] rounded-lg shadow-2xl p-1 z-40">
-                    <button onClick={() => { setCurrentPair('BTC/USDC'); setShowPairSelector(false); }} className="w-full text-left px-3 py-2 hover:bg-[#161c22] rounded text-white font-mono">BTC/USDC</button>
-                    <button onClick={() => { setCurrentPair('ETH/USDC'); setShowPairSelector(false); }} className="w-full text-left px-3 py-2 hover:bg-[#161c22] rounded text-white font-mono">ETH/USDC</button>
+                    <button onClick={() => { setCurrentPair('btc/USDC'); setShowPairSelector(false); }} className="w-full text-left px-3 py-2 hover:bg-[#161c22] rounded text-white font-mono">btc / USDC</button>
+                    <button onClick={() => { setCurrentPair('EURC/USDC'); setShowPairSelector(false); }} className="w-full text-left px-3 py-2 hover:bg-[#161c22] rounded text-white font-mono">EURC / USDC</button>
                   </div>
                 )}
               </div>
 
-              <div className="flex items-center gap-5 text-[11px] font-mono">
-                <div><span className={currentPair === 'BTC/USDC' ? "text-emerald-400 text-sm font-bold" : "text-red-400 text-sm font-bold"}>{currentPair === 'BTC/USDC' ? '63,822.7' : '3,450.5'}</span> <span className="text-red-500 text-[10px]">-5.03%</span></div>
-                <div className="hidden sm:block text-gray-500">Mark <span className="text-gray-300">{currentPair === 'BTC/USDC' ? '63,838.6' : '3,451.2'}</span></div>
-                <div className="hidden md:block text-gray-500">24h High <span className="text-gray-300">{currentPair === 'BTC/USDC' ? '67,478.6' : '3,610.0'}</span></div>
-                <div className="hidden md:block text-gray-500">24h Vol(USDC) <span className="text-emerald-500">479,403,360.4</span></div>
-                <div className="text-gray-500">Funding / Countdown <span className="text-emerald-400">+0.0100% / 02:43:08</span></div>
+              <div className="flex items-center gap-5 text-[11px] font-mono text-gray-500">
+                <div><span className="text-emerald-400 text-sm font-bold">{currentPair === 'btc/USDC' ? '63,822.7' : '1.0820'}</span> <span className="text-red-500 text-[10px]">-0.45%</span></div>
+                <div>Mark: <span className="text-gray-300">{currentPair === 'btc/USDC' ? '63,835.1' : '1.0821'}</span></div>
+                <div className="hidden md:block">Index: <span className="text-gray-300">{currentPair === 'btc/USDC' ? '63,820.0' : '1.0818'}</span></div>
+                <div className="hidden lg:block">24h Open Interest: <span className="text-emerald-400">12,409.12 USDC</span></div>
               </div>
-            </div>
-            
-            <div className="text-[11px] font-mono text-gray-400 flex items-center gap-4 bg-[#12161a] px-3 py-1 rounded border border-[#1c2229]">
-              <div>USDC: <span className="text-white font-bold">{balances.USDC.toFixed(2)}</span></div>
-              <div>BTC: <span className="text-white font-bold">{balances.BTC.toFixed(3)}</span></div>
-              <div>ETH: <span className="text-white font-bold">{balances.ETH.toFixed(3)}</span></div>
             </div>
           </div>
 
-          {/* 2. GRID WORKSPACE LAYOUT */}
-          <div className="grid grid-cols-1 xl:grid-cols-12 h-[calc(100vh-85px)] overflow-hidden">
+          {/* WORKSPACE WORKFLOW STRUCTURE */}
+          <div className="grid grid-cols-1 xl:grid-cols-12 h-[calc(100vh-120px)] overflow-hidden">
             
-            {/* CỘT TRÁI + GIỮA: CHART VÀ ORDER BOOK */}
+            {/* TRÁI + GIỮA: CHART VÀ ORDER BOOK */}
             <div className="xl:col-span-9 flex flex-col border-r border-[#1c2229] overflow-y-auto">
               
-              <div className="p-4 bg-[#090b0d] border-b border-[#1c2229] flex-grow flex flex-col justify-between min-h-[360px]">
+              {/* CHART BOX */}
+              <div className="p-4 bg-[#090b0d] border-b border-[#1c2229] flex-grow flex flex-col justify-between min-h-[340px]">
                 <div className="flex items-center justify-between text-gray-500 text-[10px] font-mono border-b border-[#12161a] pb-2 mb-2">
-                  <div className="flex items-center gap-3">
-                    <span className="text-white font-bold">{currentPair} • 1D • GRVT Engine Stream</span>
-                    <span className="text-gray-600">1m 15m 1h 1d 1w</span>
-                  </div>
-                  <div className="text-gray-400 font-bold">● Live Connection Active</div>
+                  <span className="text-white font-bold">{currentPair} • Perpetual Market Stream</span>
+                  <span className="text-emerald-400">● Live Connection Active</span>
                 </div>
 
                 <div className="w-full flex-grow flex items-end justify-center gap-4 pb-6 pt-4 relative bg-[#0b0e12] rounded-lg border border-[#13181f]">
@@ -224,137 +295,23 @@ export default function Home() {
                     {[...Array(48)].map((_, i) => <div key={i} className="border border-white"></div>)}
                   </div>
                   
-                  <div className="flex items-end gap-3 h-[200px] relative z-10 font-mono text-[9px] text-gray-600">
+                  <div className="flex items-end gap-3 h-[180px] relative z-10 font-mono">
                     <div className="flex flex-col items-center justify-end h-full"><div className="w-[1px] h-12 bg-red-500"></div><div className="w-5 h-20 bg-red-500/80 rounded-sm"></div></div>
                     <div className="flex flex-col items-center justify-end h-full"><div className="w-[1px] h-24 bg-green-500"></div><div className="w-5 h-28 bg-green-500/80 rounded-sm"></div></div>
-                    <div className="flex flex-col items-center justify-end h-full"><div className="w-[1px] h-16 bg-red-500"></div><div className="w-5 h-32 bg-red-500/80 rounded-sm"></div></div>
-                    <div className="flex flex-col items-center justify-end h-full"><div className="w-[1px] h-10 bg-green-500"></div><div className="w-5 h-16 bg-green-500/80 rounded-sm"></div></div>
-                    <div className="flex flex-col items-center justify-end h-full"><div className="w-[1px] h-32 bg-green-500"></div><div className="w-5 h-24 bg-green-500/80 rounded-sm"></div></div>
+                    <div className="flex flex-col items-center justify-end h-full"><div className="w-[1px] h-16 bg-red-500"></div><div className="w-5 h-24 bg-red-500/80 rounded-sm"></div></div>
+                    <div className="flex flex-col items-center justify-end h-full"><div className="w-[1px] h-32 bg-green-500"></div><div className="w-5 h-36 bg-green-500/80 rounded-sm"></div></div>
                   </div>
                 </div>
               </div>
 
-              {/* SỔ LỆNH ORDER BOOK KÉP */}
+              {/* TWO COLUMN ORDER BOOK */}
               <div className="p-4 bg-[#0d1013] flex-grow">
-                <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <span>📊 Order Book / Market Liquidity</span>
-                  <span className="text-[10px] text-emerald-500 font-mono normal-case">Circle Testnet Live Feed</span>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 font-mono text-xs">
+                <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">📊 Order Book Engine</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
                   <div>
-                    <div className="text-red-400 font-bold mb-1.5 border-b border-[#252f3b] pb-1">🛑 Sell Orders (Asks)</div>
+                    <div className="text-red-400 font-bold mb-1 border-b border-[#252f3b] pb-1">🛑 Sell Orders (Asks)</div>
                     <table className="w-full text-left">
-                      <thead><tr className="text-gray-500 text-[11px]"><th className="pb-1">Price (USDC)</th><th className="pb-1">Quantity</th><th className="pb-1 text-right">Total</th></tr></thead>
+                      <thead><tr className="text-gray-500 text-[10px]"><th className="pb-1">Price (USDC)</th><th className="pb-1">Quantity</th><th className="pb-1 text-right">Total</th></tr></thead>
                       <tbody>
                         {sellOrders.map((o, i) => (
-                          <tr key={i} className="hover:bg-red-950/20 transition-colors"><td className="py-1 text-red-500 font-bold">{o.price.toFixed(1)}</td><td className="py-1 text-gray-300">{o.quantity.toFixed(3)}</td><td className="py-1 text-right text-gray-400">{o.total.toFixed(1)}</td></tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  <div>
-                    <div className="text-emerald-400 font-bold mb-1.5 border-b border-[#252f3b] pb-1">🟢 Buy Orders (Bids)</div>
-                    <table className="w-full text-left">
-                      <thead><tr className="text-gray-500 text-[11px]"><th className="pb-1">Price (USDC)</th><th className="pb-1">Quantity</th><th className="pb-1 text-right">Total</th></tr></thead>
-                      <tbody>
-                        {buyOrders.map((o, i) => (
-                          <tr key={i} className="hover:bg-emerald-950/20 transition-colors"><td className="py-1 text-emerald-400 font-bold">{o.price.toFixed(1)}</td><td className="py-1 text-gray-300">{o.quantity.toFixed(3)}</td><td className="py-1 text-right text-gray-400">{o.total.toFixed(1)}</td></tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-
-            {/* CỘT PHẢI: KHUNG ĐẶT LỆNH GIAO DỊCH */}
-            <div className="xl:col-span-3 bg-[#0d1013] p-4 flex flex-col justify-between overflow-y-auto">
-              <div>
-                <div className="flex gap-2 mb-4">
-                  <select className="flex-1 bg-[#161c22] border border-[#252f3b] text-white p-2 rounded-lg text-xs font-bold focus:outline-none">
-                    <option>Isolated Margin</option>
-                    <option>Cross Margin</option>
-                  </select>
-                  <select 
-                    value={leverage} 
-                    onChange={(e) => setLeverage(e.target.value)}
-                    className="w-24 bg-[#161c22] border border-[#252f3b] text-emerald-400 p-2 rounded-lg text-xs font-bold font-mono focus:outline-none"
-                  >
-                    <option>10x</option><option>20x</option><option>40x</option><option>100x</option>
-                  </select>
-                </div>
-
-                <div className="flex bg-[#161c22] p-1 rounded-lg mb-4 border border-[#1f2730]">
-                  <button onClick={() => setOrderType('BUY')} className={`flex-1 text-center py-2 text-xs font-black rounded-md uppercase transition-all ${orderType === 'BUY' ? 'bg-emerald-500 text-black shadow-md' : 'text-gray-400 hover:text-white'}`}>Buy / Long</button>
-                  <button onClick={() => setOrderType('SELL')} className={`flex-1 text-center py-2 text-xs font-black rounded-md uppercase transition-all ${orderType === 'SELL' ? 'bg-red-500 text-white shadow-md' : 'text-gray-400 hover:text-white'}`}>Sell / Short</button>
-                </div>
-
-                <form onSubmit={handlePlaceOrder} className="space-y-4">
-                  <div>
-                    <div className="flex justify-between text-gray-400 mb-1 text-[11px]"><span>Price</span><span>USDC</span></div>
-                    <input type="number" step="any" value={priceInput} onChange={(e) => setPriceInput(e.target.value)} className="w-full bg-[#161c22] border border-[#252f3b] text-white p-2.5 rounded-lg text-xs font-mono focus:outline-none focus:border-emerald-500/50" />
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-gray-400 mb-1 text-[11px]"><span>Quantity</span><span>{currentPair.split('/')[0]}</span></div>
-                    <input type="number" step="any" value={qtyInput} onChange={(e) => setQtyInput(e.target.value)} className="w-full bg-[#161c22] border border-[#252f3b] text-white p-2.5 rounded-lg text-xs font-mono focus:outline-none focus:border-emerald-500/50" />
-                  </div>
-
-                  <div className="flex justify-between gap-1 pt-1">
-                    {['25%', '50%', '75%', '100%'].map((pct) => (
-                      <button key={pct} type="button" className="flex-1 bg-[#1c2229] hover:bg-[#252f3b] text-gray-400 py-1 rounded text-[10px] font-mono transition-colors">{pct}</button>
-                    ))}
-                  </div>
-
-                  <div className="bg-[#161c22] p-3 rounded-lg border border-[#1f2730] text-[11px] font-mono space-y-1.5 text-gray-400">
-                    <div className="flex justify-between"><span>Order Value:</span><span className="text-white">{(parseFloat(priceInput || '0') * parseFloat(qtyInput || '0')).toFixed(2)} USDC</span></div>
-                    <div className="flex justify-between"><span>Margin Requirement:</span><span className="text-emerald-400">{((parseFloat(priceInput || '0') * parseFloat(qtyInput || '0')) / parseInt(leverage)).toFixed(2)} USDC</span></div>
-                  </div>
-
-                  <button type="submit" className={`w-full py-3 rounded-lg text-xs font-black uppercase tracking-wider transition-all active:scale-[0.99] shadow-lg ${orderType === 'BUY' ? 'bg-emerald-500 hover:bg-emerald-400 text-black' : 'bg-red-500 hover:bg-red-400 text-white'}`}>
-                    {orderType === 'BUY' ? '🟢 Execute Open Long' : '🛑 Execute Open Short'}
-                  </button>
-                </form>
-              </div>
-
-              <div className="border-t border-[#1c2229] pt-3 mt-4 text-[11px] text-gray-500 font-mono text-center">
-                Connected to Circle Sandbox Relay Engine
-              </div>
-            </div>
-
-          </div>
-        </div>
-      )}
-
-      {/* CÁC TABS PHỤ ĐỂ MÔ PHỎNG ĐỦ CHỨC NĂNG SÀN */}
-      {activeTab !== 'TRADE' && (
-        <div className="p-8 max-w-xl mx-auto text-center min-h-[400px] flex flex-col justify-center items-center bg-[#0d1013] border border-[#1c2229] rounded-2xl mt-12">
-          <h2 className="text-base font-bold text-emerald-400 uppercase tracking-widest mb-2">{activeTab} Ecosystem Dashboard</h2>
-          <p className="text-gray-400 leading-relaxed text-xs">Môi trường phân tích trạng thái và phân phối thanh khoản được liên kết trực tiếp với dữ liệu ví mạng thử nghiệm Circle Testnet.</p>
-        </div>
-      )}
-
-      {/* DIALOG POP-UP MODAL CHỌN KẾT NỐI VÍ */}
-      {showConnectModal && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-          <div className="bg-[#0d1013] border border-[#252f3b] rounded-xl max-w-xs w-full p-5 relative shadow-2xl animate-in fade-in duration-150">
-            <button onClick={() => setShowConnectModal(false)} className="absolute top-3 right-3 text-gray-500 hover:text-white transition-colors">✕</button>
-            <h3 className="text-xs font-bold uppercase tracking-wider mb-4 text-gray-400">Connect Web3 Wallet</h3>
-            <div className="space-y-2">
-              <button onClick={() => connectWallet('metamask')} className="w-full bg-[#161c22] hover:bg-[#1f2730] border border-[#252f3b] rounded-lg p-3 flex items-center justify-between font-bold text-left text-white transition-colors">
-                <span>🦊 MetaMask App</span><span className="text-[9px] bg-emerald-950 text-emerald-400 px-1.5 py-0.5 rounded font-mono">Active</span>
-              </button>
-              <button onClick={() => connectWallet('coinbase')} className="w-full bg-[#161c22] hover:bg-[#1f2730] border border-[#252f3b] rounded-lg p-3 flex items-center justify-between font-bold text-left text-white transition-colors">
-                <span>🛡️ Coinbase Wallet</span><span className="text-[9px] bg-gray-800 text-gray-400 px-1.5 py-0.5 rounded font-mono">Detected</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-    </main>
-  );
-}
+                          <tr key={i} className={`hover:bg-red-950/20 ${o.isUser ? 'bg-yellow-950 border border-yellow-700 animate-pulse' : ''}`}><td className="py-1 text-red-500 font-bold">{o.price.toFixed(currentPair === 'btc/USDC' ? 1 : 4)}</td><td className="
