@@ -108,7 +108,6 @@ export default function Home() {
       return;
     }
 
-    // Trừ ví Web3, cộng vào ví sàn giao dịch
     setWalletBalances(prev => ({ ...prev, [depositAsset]: prev[depositAsset] - amt }));
     setAccountBalances(prev => ({ ...prev, [depositAsset]: prev[depositAsset] + amt }));
     setShowDepositModal(false);
@@ -141,7 +140,9 @@ export default function Home() {
 
     const p = parseFloat(priceInput);
     const q = parseFloat(qtyInput);
-    if (isNaN(p) || iNaN(q) || q <= 0) return;
+    
+    // ĐÃ SỬA: Thay iNaN(q) thành isNaN(q) chuẩn TypeScript ở đây
+    if (isNaN(p) || isNaN(q) || q <= 0) return;
 
     const totalCost = p * q;
     const levMultiplier = parseInt(leverage);
@@ -152,12 +153,10 @@ export default function Home() {
         alert(`Thất bại: Tài khoản sàn cần tối thiểu ${requiredMargin.toFixed(2)} USDC làm ký quỹ Margin! Vui lòng bấm NẠP COIN.`);
         return;
       }
-      // Trừ tiền ký quỹ và đẩy lệnh vào sổ
       setAccountBalances(prev => ({ ...prev, USDC: prev.USDC - requiredMargin }));
       const newRow: OrderRow = { price: p, quantity: q, total: totalCost, type: 'buy', isUser: true };
       setBuyOrders(prev => [newRow, ...prev.slice(0, 4)]);
     } else {
-      // Khớp lệnh Short/Sell
       const token = currentPair.split('/')[0] as 'btc' | 'EURC';
       if (accountBalances[token] < q) {
         alert(`Thất bại: Tài khoản sàn của bạn không đủ ${q} ${token} để thực hiện lệnh vị thế bán!`);
@@ -231,7 +230,7 @@ export default function Home() {
         </div>
       </header>
 
-      {/* DASHBOARD QUẢN LÝ TÀI SẢN (HIỂN THỊ ĐỒNG BỘ 2 KHO) */}
+      {/* DASHBOARD QUẢN LÝ TÀI SẢN */}
       <div className="bg-[#11151a] border-b border-[#1c2229] px-4 py-2 grid grid-cols-1 md:grid-cols-2 gap-4 text-[11px] font-mono">
         <div className="flex flex-wrap items-center gap-4 text-gray-400">
           <span className="text-gray-200 font-bold">🦊 1. Số dư trên Ví Web3 (Chờ nạp):</span>
@@ -247,7 +246,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* GIAO DIỆN TRADE CHUẨN GRVT */}
+      {/* GIAO DIỆN TRADE */}
       {activeTab === 'TRADE' && (
         <div className="flex flex-col">
           
@@ -279,7 +278,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* WORKSPACE WORKFLOW STRUCTURE */}
+          {/* WORKSPACE */}
           <div className="grid grid-cols-1 xl:grid-cols-12 h-[calc(100vh-120px)] overflow-hidden">
             
             {/* TRÁI + GIỮA: CHART VÀ ORDER BOOK */}
