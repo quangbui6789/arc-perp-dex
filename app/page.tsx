@@ -1,156 +1,172 @@
-"use client";
-import { useState } from "react";
-import { ethers } from "ethers";
+'use client';
+
+import { useState } from 'react';
+import dynamic from 'next/dynamic';
+
+// Khởi tạo động component Biểu đồ và tắt SSR để tránh lỗi kẹt Loading Candlestick Engine
+const CandlestickChart = dynamic(
+  () => import('./components/CandlestickChart'), // Đảm bảo đường dẫn này đúng với file chứa code biểu đồ của bạn
+  { 
+    ssr: false, 
+    loading: () => (
+      <div className="flex h-[350px] flex-col items-center justify-center text-gray-400">
+        <div className="animate-pulse text-sm font-medium">Real-time Hybrid Orderbook Candlestick Engine...</div>
+      </div>
+    )
+  }
+);
 
 export default function Home() {
-  const [walletAddress, setWalletAddress] = useState<string>("");
-  const [amount, setAmount] = useState<string>("");
-  const [tokenType, setTokenType] = useState<string>("USDC");
+  // Quản lý trạng thái chuyển đổi giữa các Tab bằng State hoạt động trực tiếp ở Client
+  const [activeTab, setActiveTab] = useState('TRADE');
 
-  const connectWallet = async () => {
-    if (typeof window !== "undefined" && (window as any).ethereum) {
-      try {
-        const provider = new ethers.BrowserProvider((window as any).ethereum);
-        const signer = await provider.getSigner();
-        const address = await signer.getAddress();
-        setWalletAddress(address);
-      } catch (error) {
-        console.error("Kết kết nối ví thất bại:", error);
-      }
-    } else {
-      alert("Vui lòng cài đặt MetaMask!");
-    }
-  };
+  const navItems = [
+    { name: 'TRADE', hasApy: false },
+    { name: 'EARN', hasApy: true },
+    { name: 'PORTFOLIO', hasApy: false },
+    { name: 'CIRCLE FAUCET', hasApy: false }
+  ];
 
   return (
-    <main className="min-h-screen bg-[#0B0E11] text-gray-200 antialiased selection:bg-emerald-500/30">
-      {/* Top Navigation Bar */}
-      <header className="border-b border-gray-800/80 bg-[#12161A] px-6 py-3 flex justify-between items-center backdrop-blur-sm sticky top-0 z-50">
-        <div className="flex items-center space-x-8">
-          <span className="text-lg font-bold text-white tracking-widest flex items-center">
-            <span className="text-emerald-500 mr-1.5 animate-pulse">⚡</span>ARC PERP
-          </span>
-          <nav className="hidden md:flex space-x-6 text-xs font-semibold uppercase tracking-wider text-gray-400">
-            <a className="text-emerald-400 border-b-2 border-emerald-500 pb-4 mt-1 cursor-pointer">Trade</a>
-            <a className="hover:text-white transition py-1 cursor-pointer">Earn <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded ml-1">15% APY</span></a>
-            <a className="hover:text-white transition py-1 cursor-pointer">Portfolio</a>
-            <a className="hover:text-white transition py-1 cursor-pointer text-blue-400">Circle Faucet</a>
+    <main className="min-h-screen bg-[#0b0e11] text-white font-sans selection:bg-green-500 selection:text-black">
+      {/* HEADER / NAVBAR */}
+      <header className="flex items-center justify-between px-6 py-4 border-b border-gray-900 bg-[#0b0e11]">
+        <div className="flex items-center gap-8">
+          {/* Logo */}
+          <div className="flex items-center gap-2 font-black text-lg tracking-wider text-white">
+            <span className="text-yellow-400 text-xl">⚡</span> ARC PERP
+          </div>
+          
+          {/* Menu điều hướng các Tab */}
+          <nav className="flex items-center gap-6">
+            {navItems.map((item) => {
+              const isActive = activeTab === item.name;
+              return (
+                <button
+                  key={item.name}
+                  onClick={() => setActiveTab(item.name)}
+                  className={`text-xs font-bold transition-all duration-200 uppercase tracking-wider relative py-1 focus:outline-none ${
+                    isActive ? 'text-green-400' : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  {item.name}
+                  {item.hasApy && (
+                    <span className="ml-2 text-[10px] bg-green-950/80 text-green-400 px-1.5 py-0.5 rounded border border-green-900 font-semibold normal-case">
+                      15% APY
+                    </span>
+                  )}
+                  {isActive && (
+                    <span className="absolute bottom-0 left-0 w-full h-[2px] bg-green-400 rounded-full" />
+                  )}
+                </button>
+              );
+            })}
           </nav>
         </div>
-        
-        {!walletAddress ? (
-          <button onClick={connectWallet} className="bg-emerald-500 hover:bg-emerald-600 text-gray-950 px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all duration-200 transform active:scale-95 shadow-lg shadow-emerald-500/20">
-            Connect Wallet
-          </button>
-        ) : (
-          <div className="text-xs bg-gray-900 border border-gray-800 px-3 py-2 rounded-lg max-w-[150px] truncate text-emerald-400 font-mono ring-1 ring-emerald-500/20">
-            {walletAddress}
-          </div>
-        )}
+
+        {/* Địa chỉ ví giả lập hiển thị góc phải */}
+        <div className="bg-gray-900/60 border border-gray-800 rounded-lg px-3 py-1.5 text-xs font-mono text-green-400 max-w-[140px] truncate shadow-sm">
+          0x2F484e967b28879...
+        </div>
       </header>
 
-      {/* Market Ticker Stats Bar */}
-      <div className="bg-[#12161A]/60 border-b border-gray-800/60 px-6 py-2.5 flex flex-wrap gap-8 text-[11px] font-medium text-gray-400">
-        <div className="flex items-center space-x-2">
-          <span className="text-white font-bold">MON / USDT</span>
-          <span className="text-rose-500 font-semibold bg-rose-500/10 px-1.5 py-0.5 rounded">-1.70%</span>
-        </div>
-        <div><span className="text-gray-500 mr-1.5">Index Price:</span><span className="text-gray-200 font-mono">0.02105</span></div>
-        <div><span className="text-gray-500 mr-1.5">Mark Price:</span><span className="text-gray-300 font-mono">0.02101</span></div>
-        <div><span className="text-gray-500 mr-1.5">24h Vol:</span><span className="text-emerald-400 font-mono">1,103,336.64 USDT</span></div>
-        <div><span className="text-gray-500 mr-1.5">Funding Rate:</span><span className="text-emerald-400 font-mono">+0.0100%</span></div>
-      </div>
-
-      {/* Main Professional Trading Grid */}
-      <div className="max-w-[1600px] mx-auto p-4 grid grid-cols-1 xl:grid-cols-4 gap-4">
-        
-        {/* Left Columns: Charts & Order Book */}
-        <div className="xl:col-span-3 space-y-4">
-          {/* Chart Workspace Container */}
-          <div className="bg-[#12161A] border border-gray-800/80 rounded-xl p-4 h-[420px] flex flex-col justify-center items-center relative overflow-hidden group shadow-inner">
-            <div className="absolute top-3 left-4 flex items-center space-x-2 text-xs font-semibold text-gray-400 bg-gray-900/50 px-2.5 py-1 rounded-md border border-gray-800">
-              <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></span>
-              <span>MONUSDT • 15m • TradingView Stream</span>
-            </div>
-            <div className="text-center space-y-2 max-w-sm">
-              <div className="text-4xl text-gray-700 font-light tracking-widest group-hover:text-emerald-500/40 transition-colors duration-500">📊</div>
-              <p className="text-xs text-gray-500 font-mono">Real-time Hybrid Orderbook Candlestick Engine</p>
-            </div>
-            {/* Fake chart bottom indicator lines */}
-            <div className="absolute bottom-0 left-0 w-full h-[60px] bg-gradient-to-t from-emerald-500/5 to-transparent border-t border-gray-800/20 grid grid-cols-12 items-end px-4 gap-1">
-              {[40,20,55,70,30,45,60,85,40,50,65,35].map((h, i) => (
-                <div key={i} style={{height: `${h}%`}} className={`rounded-t-sm w-full ${i % 3 === 0 ? 'bg-rose-500/20' : 'bg-emerald-500/20'}`}></div>
-              ))}
-            </div>
-          </div>
-
-          {/* Dual Order Book Column Layout */}
-          <div className="bg-[#12161A] border border-gray-800/80 rounded-xl p-4 shadow-xl">
-            <div className="flex justify-between items-center mb-4 border-b border-gray-800/50 pb-2">
-              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center">
-                <span className="mr-1.5 text-gray-500">📋</span> Order Book
-              </h3>
-              <span className="text-[10px] text-gray-500 font-mono">Spread: 0.00001 (0.05%)</span>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 font-mono text-xs">
-              {/* Sell Orders (Asks) */}
-              <div className="space-y-1">
-                <div className="flex justify-between text-[11px] font-bold text-gray-500 border-b border-gray-900 pb-1 uppercase tracking-wider"><span>Price (USDT)</span><span>Size (MON)</span></div>
-                <div className="flex justify-between text-rose-400 bg-rose-500/5 px-2 py-0.5 rounded"><span>0.02111</span><span className="text-gray-400">11,954</span></div>
-                <div className="flex justify-between text-rose-400/90 bg-rose-500/[0.03] px-2 py-0.5 rounded"><span>0.02110</span><span className="text-gray-400">83,994</span></div>
-                <div className="flex justify-between text-rose-400/80 bg-rose-500/[0.01] px-2 py-0.5 rounded"><span>0.02109</span><span className="text-gray-400">69,661</span></div>
+      {/* NỘI DUNG THAY ĐỔI THEO TAB */}
+      <div className="p-4 max-w-[1600px] mx-auto">
+        {activeTab === 'TRADE' && (
+          <>
+            {/* Ticker / Thanh thông tin thị trường */}
+            <div className="flex flex-wrap items-center gap-6 mb-4 text-[11px] text-gray-400 bg-[#12161a]/40 border border-gray-900 rounded-lg p-3">
+              <div className="font-bold text-white text-xs flex items-center gap-1.5">
+                MON / USDT <span className="text-red-500 font-normal bg-red-950/30 px-1 py-0.5 rounded text-[10px]">-1.70%</span>
               </div>
-              {/* Buy Orders (Bids) */}
-              <div className="space-y-1">
-                <div className="flex justify-between text-[11px] font-bold text-gray-500 border-b border-gray-900 pb-1 uppercase tracking-wider"><span>Price (USDT)</span><span>Size (MON)</span></div>
-                <div className="flex justify-between text-emerald-400 bg-emerald-500/5 px-2 py-0.5 rounded"><span>0.02100</span><span className="text-gray-400">191,660</span></div>
-                <div className="flex justify-between text-emerald-400/90 bg-emerald-500/[0.03] px-2 py-0.5 rounded"><span>0.02099</span><span className="text-gray-400">224,516</span></div>
-                <div className="flex justify-between text-emerald-400/80 bg-emerald-500/[0.01] px-2 py-0.5 rounded"><span>0.02098</span><span className="text-gray-400">82,061</span></div>
-              </div>
+              <div>Index Price: <span className="text-white font-mono">0.02105</span></div>
+              <div>Mark Price: <span className="text-white font-mono">0.02101</span></div>
+              <div>24h Vol: <span className="text-green-400 font-mono">1,103,336.64 USDT</span></div>
+              <div>Funding Rate: <span className="text-green-400 font-mono">+0.0100%</span></div>
             </div>
-          </div>
-        </div>
 
-        {/* Right Column: Margin Faucet Deposit Console */}
-        <div className="bg-[#12161A] border border-gray-800/80 rounded-xl p-5 shadow-2xl flex flex-col justify-between h-fit ring-1 ring-gray-800/40">
-          <div>
-            <div className="flex items-center space-x-2 mb-5 border-b border-gray-800/50 pb-3">
-              <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full shadow-[0_0_8px_#10b981]"></div>
-              <h2 className="text-xs font-bold text-white uppercase tracking-widest">Margin Console</h2>
-            </div>
-            
-            <div className="space-y-5">
-              <div>
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">Circle Faucet Asset</label>
-                <div className="relative">
-                  <select value={tokenType} onChange={(e) => setTokenType(e.target.value)} className="w-full bg-[#171C22] border border-gray-700/80 rounded-lg p-3 text-xs text-white font-semibold focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 appearance-none cursor-pointer transition-all">
-                    <option value="USDC">Circle USDC</option>
-                    <option value="cirBTC">Circle wrapped BTC (cirBTC)</option>
-                    <option value="EURC">Circle EURC</option>
-                  </select>
-                  <div className="absolute right-3 top-3.5 pointer-events-none text-gray-500 text-[10px]">▼</div>
+            {/* Bố cục chính: Biểu đồ và Khung đặt lệnh */}
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+              {/* Vùng hiển thị biểu đồ */}
+              <div className="lg:col-span-3 bg-[#12161a] border border-gray-900 rounded-xl p-4 flex flex-col justify-between min-h-[480px]">
+                <div className="text-[10px] text-gray-500 font-mono flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+                  MONUSDT • 15m • TradingView Stream
+                </div>
+                <div className="my-auto w-full">
+                  <CandlestickChart />
                 </div>
               </div>
 
-              <div>
-                <div className="flex justify-between mb-2">
-                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-400">Deposit Amount</label>
-                  <span className="text-[10px] text-gray-500 font-mono">Available: 0.00</span>
+              {/* Vùng hiển thị Margin Console */}
+              <div className="bg-[#12161a] border border-gray-900 rounded-xl p-5 h-fit shadow-lg">
+                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest mb-5 text-gray-200">
+                  <span className="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.6)]"></span>
+                  Margin Console
                 </div>
-                <div className="relative">
-                  <input type="number" placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full bg-[#171C22] border border-gray-700/80 rounded-lg p-3 text-xs text-white font-mono placeholder-gray-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all" />
-                  <span className="absolute right-3 top-3 text-[11px] font-bold text-gray-500 font-mono bg-gray-900/60 px-2 py-0.5 rounded">{tokenType}</span>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-[10px] text-gray-400 block mb-1.5 uppercase tracking-wider font-semibold">Circle Faucet Asset</label>
+                    <select className="w-full bg-[#1b2026] border border-gray-800 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-green-500/50 transition-colors cursor-pointer">
+                      <option>Circle USDC</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between text-[10px] text-gray-400 mb-1.5 font-semibold tracking-wider">
+                      <span className="uppercase">Deposit Amount</span>
+                      <span>Available: 0.00</span>
+                    </div>
+                    <div className="relative">
+                      <input 
+                        type="number" 
+                        defaultValue="1" 
+                        className="w-full bg-[#1b2026] border border-gray-800 rounded-lg p-2.5 text-xs text-white font-mono pr-12 focus:outline-none focus:border-green-500/50 transition-colors"
+                      />
+                      <span className="absolute right-3 top-3 text-[10px] text-gray-500 font-bold tracking-tight">USDC</span>
+                    </div>
+                  </div>
+
+                  <button className="w-full bg-green-500 hover:bg-green-400 active:scale-[0.99] text-slate-950 font-black py-3 rounded-lg text-xs transition-all duration-150 uppercase tracking-widest mt-2 shadow-md shadow-green-500/10">
+                    Confirm Cross Margin Deposit
+                  </button>
                 </div>
               </div>
             </div>
+
+            {/* Khung chứa Sổ lệnh / Order Book mẫu phía dưới */}
+            <div className="mt-4 bg-[#12161a] border border-gray-900 rounded-xl p-4">
+              <div className="text-xs font-bold text-gray-400 border-b border-gray-900 pb-2 mb-3 flex items-center gap-1.5 uppercase tracking-wider">
+                📄 Order Book
+              </div>
+              <div className="text-center text-xs text-gray-600 py-6 font-mono">
+                Orderbook data feed streaming via local engine...
+              </div>
+            </div>
+          </>
+        )}
+
+        {activeTab === 'EARN' && (
+          <div className="bg-[#12161a] border border-gray-900 rounded-xl p-6 text-center min-h-[300px] flex flex-col justify-center items-center">
+            <h2 className="text-lg font-bold text-green-400 mb-2">ARC Vault & Staking Program</h2>
+            <p className="text-xs text-gray-400 max-w-md">Deposit liquidity into market maker vaults to earn an estimated 15% APY accumulated in real-time from trade funding rates.</p>
           </div>
+        )}
 
-          <button onClick={() => alert(`Đang đẩy lệnh nạp Ký quỹ: ${amount} ${tokenType} vào Smart Contract...`)} className="w-full bg-emerald-500 hover:bg-emerald-600 text-gray-950 py-3.5 rounded-xl font-bold text-xs uppercase tracking-widest transition-all shadow-lg shadow-emerald-500/10 mt-6 transform active:scale-[0.98]">
-            Confirm Cross Margin Deposit
-          </button>
-        </div>
+        {activeTab === 'PORTFOLIO' && (
+          <div className="bg-[#12161a] border border-gray-900 rounded-xl p-6 text-center min-h-[300px] flex flex-col justify-center items-center">
+            <h2 className="text-lg font-bold text-white mb-2">User Account Portfolio</h2>
+            <p className="text-xs text-gray-400 max-w-md">Connect your decentralized wallet to track active perpetual leverage positions, margin collateral status, and historical distributions.</p>
+          </div>
+        )}
 
+        {activeTab === 'CIRCLE FAUCET' && (
+          <div className="bg-[#12161a] border border-gray-900 rounded-xl p-6 text-center min-h-[300px] flex flex-col justify-center items-center">
+            <h2 className="text-lg font-bold text-blue-400 mb-2">Circle Testnet Faucet</h2>
+            <p className="text-xs text-gray-400 max-w-md">Claim test tokens directly into your connected wallet to experience high-leverage trading operations on the Arc architecture.</p>
+          </div>
+        )}
       </div>
     </main>
   );
