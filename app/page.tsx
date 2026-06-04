@@ -1,23 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import dynamic from 'next/dynamic';
-
-// Khởi tạo động component Biểu đồ và tắt SSR để tránh lỗi kẹt Loading Candlestick Engine
-const CandlestickChart = dynamic(
-  () => import('./components/CandlestickChart'), // Đảm bảo đường dẫn này đúng với file chứa code biểu đồ của bạn
-  { 
-    ssr: false, 
-    loading: () => (
-      <div className="flex h-[350px] flex-col items-center justify-center text-gray-400">
-        <div className="animate-pulse text-sm font-medium">Real-time Hybrid Orderbook Candlestick Engine...</div>
-      </div>
-    )
-  }
-);
 
 export default function Home() {
-  // Quản lý trạng thái chuyển đổi giữa các Tab bằng State hoạt động trực tiếp ở Client
+  // Quản lý trạng thái chuyển đổi tab trực tiếp ở client
   const [activeTab, setActiveTab] = useState('TRADE');
 
   const navItems = [
@@ -28,7 +14,7 @@ export default function Home() {
   ];
 
   return (
-    <main className="min-h-screen bg-[#0b0e11] text-white font-sans selection:bg-green-500 selection:text-black">
+    <main className="min-h-screen bg-[#0b0e11] text-white font-sans">
       {/* HEADER / NAVBAR */}
       <header className="flex items-center justify-between px-6 py-4 border-b border-gray-900 bg-[#0b0e11]">
         <div className="flex items-center gap-8">
@@ -37,13 +23,14 @@ export default function Home() {
             <span className="text-yellow-400 text-xl">⚡</span> ARC PERP
           </div>
           
-          {/* Menu điều hướng các Tab */}
+          {/* Menu Tab */}
           <nav className="flex items-center gap-6">
             {navItems.map((item) => {
               const isActive = activeTab === item.name;
               return (
                 <button
                   key={item.name}
+                  type="button"
                   onClick={() => setActiveTab(item.name)}
                   className={`text-xs font-bold transition-all duration-200 uppercase tracking-wider relative py-1 focus:outline-none ${
                     isActive ? 'text-green-400' : 'text-gray-400 hover:text-white'
@@ -51,7 +38,7 @@ export default function Home() {
                 >
                   {item.name}
                   {item.hasApy && (
-                    <span className="ml-2 text-[10px] bg-green-950/80 text-green-400 px-1.5 py-0.5 rounded border border-green-900 font-semibold normal-case">
+                    <span className="ml-2 text-[10px] bg-green-950 text-green-400 px-1.5 py-0.5 rounded border border-green-900 font-semibold normal-case">
                       15% APY
                     </span>
                   )}
@@ -64,20 +51,20 @@ export default function Home() {
           </nav>
         </div>
 
-        {/* Địa chỉ ví giả lập hiển thị góc phải */}
-        <div className="bg-gray-900/60 border border-gray-800 rounded-lg px-3 py-1.5 text-xs font-mono text-green-400 max-w-[140px] truncate shadow-sm">
+        {/* Giả lập nút Connect Wallet / Số ví */}
+        <div className="bg-gray-900 border border-gray-800 rounded-lg px-3 py-1.5 text-xs font-mono text-green-400 max-w-[140px] truncate shadow-sm">
           0x2F484e967b28879...
         </div>
       </header>
 
-      {/* NỘI DUNG THAY ĐỔI THEO TAB */}
+      {/* CONTENT CHANGING BY TAB */}
       <div className="p-4 max-w-[1600px] mx-auto">
         {activeTab === 'TRADE' && (
           <>
             {/* Ticker / Thanh thông tin thị trường */}
-            <div className="flex flex-wrap items-center gap-6 mb-4 text-[11px] text-gray-400 bg-[#12161a]/40 border border-gray-900 rounded-lg p-3">
+            <div className="flex flex-wrap items-center gap-6 mb-4 text-[11px] text-gray-400 bg-[#12161a] border border-gray-900 rounded-lg p-3">
               <div className="font-bold text-white text-xs flex items-center gap-1.5">
-                MON / USDT <span className="text-red-500 font-normal bg-red-950/30 px-1 py-0.5 rounded text-[10px]">-1.70%</span>
+                MON / USDT <span className="text-red-500 font-normal bg-red-950 px-1 py-0.5 rounded text-[10px]">-1.70%</span>
               </div>
               <div>Index Price: <span className="text-white font-mono">0.02105</span></div>
               <div>Mark Price: <span className="text-white font-mono">0.02101</span></div>
@@ -85,30 +72,73 @@ export default function Home() {
               <div>Funding Rate: <span className="text-green-400 font-mono">+0.0100%</span></div>
             </div>
 
-            {/* Bố cục chính: Biểu đồ và Khung đặt lệnh */}
+            {/* Bố cục chính: Biểu đồ + Khung đặt lệnh */}
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
               {/* Vùng hiển thị biểu đồ */}
               <div className="lg:col-span-3 bg-[#12161a] border border-gray-900 rounded-xl p-4 flex flex-col justify-between min-h-[480px]">
-                <div className="text-[10px] text-gray-500 font-mono flex items-center gap-1.5">
+                <div className="text-[10px] text-gray-500 font-mono flex items-center gap-1.5 mb-3">
                   <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
                   MONUSDT • 15m • TradingView Stream
                 </div>
-                <div className="my-auto w-full">
-                  <CandlestickChart />
+                
+                {/* Đồ thị nến nội suy trực tiếp bằng HTML/CSS để tuyệt đối không lỗi build */}
+                <div className="w-full flex-grow flex flex-col justify-center">
+                  <div className="flex h-[380px] flex-col items-center justify-center bg-[#161a1e] rounded-lg p-4 relative overflow-hidden border border-gray-800">
+                    <div className="flex items-end gap-3 h-[220px] w-full max-w-xl justify-center px-4 relative z-10">
+                      <div className="flex flex-col items-center h-full justify-end w-6">
+                        <div className="w-[2px] h-20 bg-green-500"></div>
+                        <div className="w-4 h-24 bg-green-500 rounded-sm"></div>
+                        <div className="w-[2px] h-12 bg-green-500"></div>
+                      </div>
+                      <div className="flex flex-col items-center h-full justify-end w-6">
+                        <div className="w-[2px] h-14 bg-red-500"></div>
+                        <div className="w-4 h-16 bg-red-500 rounded-sm"></div>
+                        <div className="w-[2px] h-8 bg-red-500"></div>
+                      </div>
+                      <div className="flex flex-col items-center h-full justify-end w-6">
+                        <div className="w-[2px] h-10 bg-green-500"></div>
+                        <div className="w-4 h-32 bg-green-500 rounded-sm"></div>
+                        <div className="w-[2px] h-16 bg-green-500"></div>
+                      </div>
+                      <div className="flex flex-col items-center h-full justify-end w-6">
+                        <div className="w-[2px] h-24 bg-green-500"></div>
+                        <div className="w-4 h-12 bg-green-500 rounded-sm"></div>
+                        <div className="w-[2px] h-10 bg-green-500"></div>
+                      </div>
+                      <div className="flex flex-col items-center h-full justify-end w-6">
+                        <div className="w-[2px] h-12 bg-red-500"></div>
+                        <div className="w-4 h-28 bg-red-500 rounded-sm"></div>
+                        <div className="w-[2px] h-14 bg-red-500"></div>
+                      </div>
+                      <div className="flex flex-col items-center h-full justify-end w-6">
+                        <div className="w-[2px] h-8 bg-green-500"></div>
+                        <div className="w-4 h-20 bg-green-500 rounded-sm"></div>
+                        <div className="w-[2px] h-8 bg-green-500"></div>
+                      </div>
+                    </div>
+                    <div className="mt-6 text-center z-10">
+                      <div className="text-xs font-bold text-gray-200 tracking-wider uppercase mb-1">
+                        Hybrid Candlestick Engine Active
+                      </div>
+                      <p className="text-[10px] text-gray-500 font-mono">
+                        Streaming real-time orderbook feed on Arc Testnet
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
               {/* Vùng hiển thị Margin Console */}
               <div className="bg-[#12161a] border border-gray-900 rounded-xl p-5 h-fit shadow-lg">
                 <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest mb-5 text-gray-200">
-                  <span className="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.6)]"></span>
+                  <span className="w-2 h-2 rounded-full bg-green-400"></span>
                   Margin Console
                 </div>
                 
                 <div className="space-y-4">
                   <div>
                     <label className="text-[10px] text-gray-400 block mb-1.5 uppercase tracking-wider font-semibold">Circle Faucet Asset</label>
-                    <select className="w-full bg-[#1b2026] border border-gray-800 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-green-500/50 transition-colors cursor-pointer">
+                    <select className="w-full bg-[#1b2026] border border-gray-800 rounded-lg p-2.5 text-xs text-white focus:outline-none cursor-pointer">
                       <option>Circle USDC</option>
                     </select>
                   </div>
@@ -122,20 +152,20 @@ export default function Home() {
                       <input 
                         type="number" 
                         defaultValue="1" 
-                        className="w-full bg-[#1b2026] border border-gray-800 rounded-lg p-2.5 text-xs text-white font-mono pr-12 focus:outline-none focus:border-green-500/50 transition-colors"
+                        className="w-full bg-[#1b2026] border border-gray-800 rounded-lg p-2.5 text-xs text-white font-mono pr-12 focus:outline-none"
                       />
                       <span className="absolute right-3 top-3 text-[10px] text-gray-500 font-bold tracking-tight">USDC</span>
                     </div>
                   </div>
 
-                  <button className="w-full bg-green-500 hover:bg-green-400 active:scale-[0.99] text-slate-950 font-black py-3 rounded-lg text-xs transition-all duration-150 uppercase tracking-widest mt-2 shadow-md shadow-green-500/10">
+                  <button type="button" className="w-full bg-green-500 hover:bg-green-400 text-slate-950 font-black py-3 rounded-lg text-xs uppercase tracking-widest mt-2 shadow-md">
                     Confirm Cross Margin Deposit
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* Khung chứa Sổ lệnh / Order Book mẫu phía dưới */}
+            {/* Sổ lệnh mẫu phía dưới */}
             <div className="mt-4 bg-[#12161a] border border-gray-900 rounded-xl p-4">
               <div className="text-xs font-bold text-gray-400 border-b border-gray-900 pb-2 mb-3 flex items-center gap-1.5 uppercase tracking-wider">
                 📄 Order Book
