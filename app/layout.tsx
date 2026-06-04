@@ -1,6 +1,4 @@
-import React from 'react';
 import './globals.css';
-import { Inter } from 'next-font-google'; // Hoặc font mặc định hệ thống nếu không dùng next/font
 
 export const metadata = {
   title: 'Arc Perp DEX (GRVT Pro Mode)',
@@ -14,7 +12,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body className="bg-[#0B0E11] text-gray-200 antialiased ">
+      <body className="bg-[#0B0E11] text-gray-200 antialiased">
         {children}
       </body>
     </html>
