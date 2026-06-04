@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 
 interface OrderRow {
   price: number;
@@ -64,7 +64,6 @@ export default function Home() {
     setCurrentPrice(base);
     setPriceInput(base.toFixed(currentPair === 'btc/USDC' ? 1 : 4));
 
-    // Tạo chuỗi 4 nến lịch sử trước đó
     const initialCandles: Candle[] = [];
     for (let i = 4; i >= 1; i--) {
       const rand = (Math.random() - 0.5) * (base * 0.001);
@@ -83,11 +82,9 @@ export default function Home() {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentPrice(prevPrice => {
-        // Biến động giá ngẫu nhiên từng giây
         const volatility = currentPair === 'btc/USDC' ? (Math.random() - 0.5) * 8.5 : (Math.random() - 0.5) * 0.0004;
         const nextPrice = prevPrice + volatility;
 
-        // Cập nhật cây nến hiện tại ở cuối danh sách theo thời gian thực
         setCandles(prevCandles => {
           if (prevCandles.length === 0) return prevCandles;
           const updated = [...prevCandles];
@@ -101,7 +98,6 @@ export default function Home() {
           return updated;
         });
 
-        // Tạo Sổ lệnh (Order book) biến động bám đuổi theo giá Real-time
         const sells: OrderRow[] = [];
         const buys: OrderRow[] = [];
         for (let i = 1; i <= 5; i++) {
@@ -120,7 +116,7 @@ export default function Home() {
 
         return nextPrice;
       });
-    }, 1000); // Cập nhật mỗi giây
+    }, 1000);
 
     return () => clearInterval(interval);
   }, [currentPair]);
@@ -134,7 +130,6 @@ export default function Home() {
         setWalletAddress(accounts[0]);
         setIsConnected(true);
 
-        // Định danh ARC Testnet Chain Parameters (Ví dụ ID: 11155111 hoặc Custom Appchain ID)
         const arcChainId = '0xaa36a7'; 
         
         try {
@@ -151,7 +146,7 @@ export default function Home() {
                 chainId: arcChainId,
                 chainName: 'ARC Testnet',
                 nativeCurrency: { name: 'ARC', symbol: 'ARC', decimals: 18 },
-                rpcUrls: ['https://rpc-testnet.arc.io'], // Config địa chỉ RPC Node của mạng ARC
+                rpcUrls: ['https://rpc-testnet.arc.io'],
                 blockExplorerUrls: ['https://explorer-testnet.arc.io']
               }]
             });
@@ -159,7 +154,6 @@ export default function Home() {
           }
         }
 
-        // Đọc số dư ví thực
         const balanceHex = await eth.request({ method: 'eth_getBalance', params: [accounts[0], 'latest'] });
         setNativeBalance((parseInt(balanceHex, 16) / Math.pow(10, 18)).toFixed(4));
       } catch (err) {
@@ -177,7 +171,6 @@ export default function Home() {
 
     try {
       const eth = (window as any).ethereum;
-      // Smart Contract Router tiếp nhận xử lý quỹ trên mạng ARC Testnet
       const arcVaultContract = "0x8888888888888888888888888888888888888888"; 
 
       alert(`[ARC On-chain] Đang tạo yêu cầu nạp ${depositAmount} ${depositAsset}.\nVui lòng duyệt lệnh trên ví...`);
@@ -187,7 +180,7 @@ export default function Home() {
         params: [{
           from: walletAddress,
           to: arcVaultContract,
-          value: '0x0', // Giá trị value gửi Native ARC hoặc Call ERC20
+          value: '0x0',
           data: '0x',   
         }],
       });
@@ -231,7 +224,6 @@ export default function Home() {
     const q = parseFloat(qtyInput);
     if (isNaN(p) || isNaN(q) || q <= 0) return;
 
-    // Khớp lệnh hiển thị ngay lập tức lên Sổ lệnh Real-time
     const totalCost = p * q;
     if (orderType === 'BUY') {
       const newRow: OrderRow = { price: p, quantity: q, total: totalCost, type: 'buy', isUser: true };
@@ -329,3 +321,140 @@ export default function Home() {
             
             {/* REAL-TIME CHART BOX AND ORDER BOOK */}
             <div className="xl:col-span-9 flex flex-col border-r border-[#1c2229] overflow-y-auto">
+              
+              <div className="p-4 bg-[#090b0d] border-b border-[#1c2229] min-h-[360px] flex flex-col justify-between">
+                <div className="flex items-center justify-between text-gray-500 text-[10px] font-mono mb-2">
+                  <span className="text-white font-bold">{currentPair} Real-Time Candlestick Feed</span>
+                  <span className="text-emerald-400 animate-pulse">● RPC Real-time Node Connected</span>
+                </div>
+
+                <div className="w-full flex-grow bg-[#0b0e12] rounded-lg border border-[#13181f] p-4 flex flex-col justify-between relative">
+                  <div className="absolute inset-0 grid grid-cols-6 grid-rows-4 pointer-events-none opacity-5">
+                    {[...Array(24)].map((_, i) => <div key={i} className="border border-white"></div>)}
+                  </div>
+                  
+                  <div className="flex items-end justify-center gap-6 h-[180px] z-10 font-mono relative mt-4">
+                    {candles.map((c, idx) => {
+                      const isGreen = c.close >= c.open;
+                      const heightPercent = Math.min(Math.max(Math.abs(c.close - c.open) * (currentPair === 'btc/USDC' ? 3.5 : 4500), 15), 140);
+                      return (
+                        <div key={idx} className="flex flex-col items-center justify-end h-full relative group">
+                          <div className={`w-[1px] h-[150px] absolute bottom-4 ${isGreen ? 'bg-emerald-500' : 'bg-red-500'} opacity-40`}></div>
+                          <div 
+                            style={{ height: `${heightPercent}px` }} 
+                            className={`w-8 rounded-sm z-20 shadow-md ${isGreen ? 'bg-emerald-500/90' : 'bg-red-500/90'} transition-all duration-300`}
+                          ></div>
+                          <span className="text-[9px] text-gray-500 mt-2 block">{c.time}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* TWO COLUMN ORDER BOOK */}
+              <div className="p-4 bg-[#0d1013] flex-grow">
+                <div className="text-xs font-bold text-gray-400 uppercase mb-2">📊 Live Order Book</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
+                  <div>
+                    <div className="text-red-400 font-bold mb-1 border-b border-[#252f3b] pb-1">🛑 Asks (Sells)</div>
+                    <table className="w-full text-left">
+                      <thead><tr className="text-gray-500 text-[10px]"><th>Price</th><th>Quantity</th><th className="text-right">Total</th></tr></thead>
+                      <tbody>
+                        {sellOrders.map((o, i) => (
+                          <tr key={i} className={o.isUser ? 'bg-yellow-950/40 border border-yellow-700' : ''}><td className="py-0.5 text-red-500 font-bold">{o.price.toFixed(currentPair === 'btc/USDC' ? 1 : 4)}</td><td>{o.quantity.toFixed(3)}</td><td className="text-right text-gray-400">{o.total.toFixed(2)}</td></tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div>
+                    <div className="text-emerald-400 font-bold mb-1 border-b border-[#252f3b] pb-1">🟢 Bids (Buys)</div>
+                    <table className="w-full text-left">
+                      <thead><tr className="text-gray-500 text-[10px]"><th>Price</th><th>Quantity</th><th className="text-right">Total</th></tr></thead>
+                      <tbody>
+                        {buyOrders.map((o, i) => (
+                          <tr key={i} className={o.isUser ? 'bg-yellow-950/40 border border-yellow-700' : ''}><td className="py-0.5 text-emerald-400 font-bold">{o.price.toFixed(currentPair === 'btc/USDC' ? 1 : 4)}</td><td>{o.quantity.toFixed(3)}</td><td className="text-right text-gray-400">{o.total.toFixed(2)}</td></tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* RIGHT CONSOLE PANEL */}
+            <div className="xl:col-span-3 bg-[#0d1013] p-4 flex flex-col justify-between overflow-y-auto">
+              <div>
+                <div className="flex bg-[#161c22] p-1 rounded-lg mb-4 border border-[#1f2730]">
+                  <button type="button" onClick={() => setOrderType('BUY')} className={`flex-1 text-center py-1.5 font-bold rounded uppercase ${orderType === 'BUY' ? 'bg-emerald-500 text-black' : 'text-gray-400'}`}>Buy / Long</button>
+                  <button type="button" onClick={() => setOrderType('SELL')} className={`flex-1 text-center py-1.5 font-bold rounded uppercase ${orderType === 'SELL' ? 'bg-red-500 text-white' : 'text-gray-400'}`}>Sell / Short</button>
+                </div>
+
+                <form onSubmit={handlePlaceOrder} className="space-y-4">
+                  <div>
+                    <label className="text-gray-400 mb-1 block">Limit Price (USDC)</label>
+                    <input type="number" step="any" value={priceInput} onChange={(e) => setPriceInput(e.target.value)} className="w-full bg-[#161c22] border border-[#252f3b] text-white p-2 rounded-lg font-mono focus:outline-none" />
+                  </div>
+                  <div>
+                    <label className="text-gray-400 mb-1 block">Quantity ({currentPair.split('/')[0]})</label>
+                    <input type="number" step="any" value={qtyInput} onChange={(e) => setQtyInput(e.target.value)} className="w-full bg-[#161c22] border border-[#252f3b] text-white p-2 rounded-lg font-mono focus:outline-none" />
+                  </div>
+                  <button type="submit" className={`w-full py-2.5 rounded-lg font-black uppercase tracking-wider ${orderType === 'BUY' ? 'bg-emerald-500 text-black' : 'bg-red-500 text-white'}`}>
+                    {isConnected ? `Execute ${orderType} On ARC` : '🔌 Connect Wallet First'}
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: DEPOSIT TIỀN THẬT QUA TRANSACTIONS */}
+      {showDepositModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+          <form onSubmit={handleDepositSubmit} className="bg-[#0d1013] border border-[#252f3b] rounded-xl max-w-sm w-full p-5 relative shadow-2xl space-y-4">
+            <button type="button" onClick={() => setShowDepositModal(false)} className="absolute top-3 right-3 text-gray-500 hover:text-white">✕</button>
+            <h3 className="text-xs font-bold uppercase text-emerald-400">📥 Nạp Tiền On-chain (ARC Network)</h3>
+            <div>
+              <label className="text-[10px] text-gray-400 block mb-1 uppercase font-bold">Tài sản ký quỹ</label>
+              <select value={depositAsset} onChange={(e) => setDepositAsset(e.target.value as any)} className="w-full bg-[#161c22] border border-[#252f3b] p-2.5 rounded-lg text-white font-mono focus:outline-none">
+                <option value="USDC">USDC Token</option>
+                <option value="EURC">EURC Token</option>
+                <option value="btc">Wrapped BTC (btc)</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-[10px] text-gray-400 block mb-1 uppercase font-bold">Số lượng nạp</label>
+              <input type="number" step="any" value={depositAmount} onChange={(e) => setDepositAmount(e.target.value)} className="w-full bg-[#161c22] border border-[#252f3b] p-2 rounded-lg font-mono text-white focus:outline-none" />
+            </div>
+            <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-black py-2.5 rounded-lg uppercase">
+              🚀 Ký gửi giao dịch ví
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* MODAL: TRANSFER TIỀN ON-CHAIN */}
+      {showTransferModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+          <form onSubmit={handleTransferSubmit} className="bg-[#0d1013] border border-[#252f3b] rounded-xl max-w-sm w-full p-5 relative shadow-2xl space-y-4">
+            <button type="button" onClick={() => setShowTransferModal(false)} className="absolute top-3 right-3 text-gray-500 hover:text-white">✕</button>
+            <h3 className="text-xs font-bold uppercase text-blue-400">💸 Chuyển tài sản nội bộ qua Blockchain</h3>
+            <div>
+              <label className="text-[10px] text-gray-400 block mb-1 uppercase font-bold">Địa chỉ ví EVM nhận (0x)</label>
+              <input type="text" placeholder="0x..." value={transferTo} onChange={(e) => setTransferTo(e.target.value)} className="w-full bg-[#161c22] border border-[#252f3b] p-2 rounded-lg text-white focus:outline-none" required />
+            </div>
+            <div>
+              <label className="text-[10px] text-gray-400 block mb-1 uppercase font-bold">Số lượng gửi</label>
+              <input type="number" step="any" value={transferAmount} onChange={(e) => setTransferAmount(e.target.value)} className="w-full bg-[#161c22] border border-[#252f3b] p-2 rounded-lg font-mono text-white focus:outline-none" />
+            </div>
+            <button type="submit" className="w-full bg-blue-500 hover:bg-blue-400 text-white font-black py-2.5 rounded-lg uppercase">
+              Xác nhận phát lệnh gửi đi
+            </button>
+          </form>
+        </div>
+      )}
+
+    </main>
+  );
+}
